@@ -1,8 +1,6 @@
-﻿::database::SqlClient
+﻿::database = SqlClient
 Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SADB;Connection Timeout=240
-::table::FilterType as FilterTypes
-FilterTypeId
-FilterTypeName
-PriceId as ToPrice::Price.Lookup(%PriceId%)::Price
+::table = FilterType::enum = FilterTypes::pk = FilterTypeId::name = FilterTypeName
+PriceId::function = ToPrice::returnType = Price::expression = Price.Lookup(%PriceId%)
 PartNamePostfix
 IsDisabled
