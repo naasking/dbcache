@@ -1,0 +1,8 @@
+﻿::database::SqlClient
+Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SADB;Connection Timeout=240
+::table::FilterType as FilterTypes
+FilterTypeId
+FilterTypeName
+PriceId as ToPrice::Price.Lookup(%PriceId%)::Price
+PartNamePostfix
+IsDisabled
