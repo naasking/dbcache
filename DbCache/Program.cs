@@ -10,6 +10,10 @@ using System.Data.OleDb;
 
 namespace DbCache
 {
+    //FIXME: need to properly name enum values (need another config value?)
+    //FIXME: need to use enum values in switch expressions
+    //FIXME: need to throw exceptions for out of bound inputs
+    //FIXME: need to return default(E) for null field values
     class Program
     {
         struct TableMapping
