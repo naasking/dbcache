@@ -27,7 +27,7 @@ namespace DbCache
             /// <summary>
             /// Enum type name.
             /// </summary>
-            public string Enum { get; set; }
+            public string EnumFQN { get; set; }
             /// <summary>
             /// Enum field name.
             /// </summary>
@@ -105,30 +105,28 @@ namespace DbCache
 
             public class CompiledType
             {
-                internal CompiledType(string name)
+                internal CompiledType(string fqn)
                 {
-                    TypeName = name;
-                    //Namespace = ns;
+                    FQN = fqn;
                 }
-                public string TypeName { get; private set; }
-                //public string Namespace { get; private set; }
+                public string FQN { get; private set; }
                 public string Namespace()
                 {
-                    var i = TypeName.LastIndexOf('.');
-                    return i < 0 ? "" : TypeName.Substring(0, i);
+                    var i = FQN.LastIndexOf('.');
+                    return i < 0 ? "" : FQN.Substring(0, i);
                 }
                 public string BaseType()
                 {
-                    var i = TypeName.LastIndexOf('.') + 1;
-                    return TypeName.Substring(i <= 0 ? 0 : i);
+                    var i = FQN.LastIndexOf('.') + 1;
+                    return FQN.Substring(i <= 0 ? 0 : i);
                 }
                 public override string ToString()
                 {
-                    return TypeName;
+                    return FQN;
                 }
                 internal InternalType Intern()
                 {
-                    return new InternalType(TypeName);
+                    return new InternalType(FQN);
                 }
             }
             public sealed class InternalType : CompiledType
@@ -186,7 +184,17 @@ namespace DbCache
             var db = config[1];
             try
             {
-                run(Parse(config), "out.cs", dbType, db);
+                var env = new Env();
+                using (var conn = GetConn(dbType, db))
+                {
+                    var mappings = Parse(config);
+                    conn.Open();
+                    foreach (var table in mappings.Values)
+                    {
+                        Compile(table, conn, env);
+                    }
+                }
+                Output(env, "out.cs");
                 Console.WriteLine("Mapping successfully generated...");
             }
             catch (Exception ex)
@@ -195,17 +203,8 @@ namespace DbCache
                 Console.ReadLine();
             }
         }
-        static void run(Dictionary<string, TableMapping> mappings, string file, string dbType, string db)
+        static void Output(Env env, string file)
         {
-            var env = new Env();
-            using (var conn = GetConn(dbType, db))
-            {
-                conn.Open();
-                foreach (var table in mappings.Values)
-                {
-                    Compile(table, conn, env);
-                }
-            }
             if (File.Exists(file)) File.Delete(file);
             using (var op = File.CreateText(file))
             {
@@ -285,7 +284,7 @@ namespace DbCache
         }
         static void Compile(TableMapping table, DbConnection conn, Env env)
         {
-            var type = env.Define(table.Enum);
+            var type = env.Define(table.EnumFQN);
             var cmd = conn.CreateCommand();
                 cmd.CommandText = string.Format(
                     "SELECT {0}, {1}, {2} FROM {3}",
@@ -366,7 +365,7 @@ namespace DbCache
                     var tableMap = new TableMapping
                     {
                         Table = tname,
-                        Enum = table.FindByKey("enum", tname),
+                        EnumFQN = table.FindByKey("enum", tname),
                         PK = table.FindByKey("pk", null),
                         Name = table.FindByKey("name", null),
                         Columns = new Dictionary<string,ColumnMapping>(),
@@ -386,7 +385,7 @@ namespace DbCache
                             ReturnType = column.FindByKey("returnType", ""),
                         });
                     }
-                    map.Add(tableMap.Enum, tableMap);
+                    map.Add(tableMap.EnumFQN, tableMap);
                 }
             }
             return map;
