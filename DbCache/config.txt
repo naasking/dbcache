@@ -1,6 +1,6 @@
 ﻿::database = SqlClient
 Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SADB;Connection Timeout=240
-::table = FilterType::namespace=SringAir.Products::enum = FilterTypes::pk = FilterTypeId::name = FilterTypeName
+::table = FilterType::enum = SringAir.Products.FilterTypes::pk = FilterTypeId::name = FilterTypeName
 PriceId::function = ToPrice::returnType = Price::expression = Price.Lookup(%PriceId%)
 PartNamePostfix
 IsDisabled

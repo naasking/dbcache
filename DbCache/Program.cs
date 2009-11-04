@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.OleDb;
+using Sasa;
 using Sasa.Linq;
 using Sasa.String;
 
@@ -19,12 +20,30 @@ namespace DbCache
         /// </summary>
         sealed class TableMapping
         {
+            /// <summary>
+            /// Table name.
+            /// </summary>
             public string Table { get; set; }
+            /// <summary>
+            /// Enum type name.
+            /// </summary>
             public string Enum { get; set; }
+            /// <summary>
+            /// Enum field name.
+            /// </summary>
             public string Name { get; set; }
+            /// <summary>
+            /// Name of primary key.
+            /// </summary>
             public string PK { get; set; }
-            public string Namespace { get; set; }
+            /// <summary>
+            /// Mapped table columns.
+            /// </summary>
             public Dictionary<string, ColumnMapping> Columns { get; set; }
+            /// <summary>
+            /// Resolved output values.
+            /// </summary>
+            //public Output Resolved { get; set; }
         }
         /// <summary>
         /// A column to extension method mapping declaration.
@@ -37,19 +56,115 @@ namespace DbCache
             public string Expression { get; set; }
             public string ReturnType { get; set; }
         }
-        /// <summary>
-        /// Tracks intermediate stubs for the enum and all dependent extension methods.
-        /// </summary>
-        struct Output
+        sealed class Env
         {
-            /// <summary>
-            /// Stub for enum.
-            /// </summary>
-            public StringBuilder Enum { get; set; }
-            /// <summary>
-            /// Map of columns to stubs for extension methods.
-            /// </summary>
-            public Dictionary<ColumnMapping, StringBuilder> Extensions { get; set; }
+            Dictionary<string, CompiledType> types = new Dictionary<string, CompiledType>();
+            Dictionary<string, CompiledFunction> fns = new Dictionary<string, CompiledFunction>();
+            public CompiledType Extern(string name)
+            {
+                if (!types.ContainsKey(name)) types[name] = new CompiledType(name);
+                return types[name];
+            }
+            public InternalType Define(string name)
+            {
+                if (!types.ContainsKey(name)) types[name] = new InternalType(name);
+                if (!(types[name] is InternalType)) types[name] = types[name].Intern();
+                return types[name] as InternalType;
+            }
+            public CompiledFunction Fun(string name)
+            {
+                return fns[name];
+            }
+            public CompiledFunction Fun(string name, InternalType arg, CompiledType returnType)
+            {
+                if (!fns.ContainsKey(name))
+                {
+                    var fn = new CompiledFunction(name, arg, returnType);
+                    arg.Functions.Add(name, fn);
+                    fns[name] = fn;
+                }
+                return Fun(name);
+            }
+            public IEnumerable<InternalType> Types
+            {
+                get
+                {
+                    foreach (var type in types.Values)
+                    {
+                        if (type is InternalType)
+                        {
+                            yield return type as InternalType;
+                        }
+                    }
+                }
+            }
+            public IEnumerable<CompiledFunction> Functions
+            {
+                get { return fns.Values; }
+            }
+
+            public class CompiledType
+            {
+                internal CompiledType(string name)
+                {
+                    TypeName = name;
+                    //Namespace = ns;
+                }
+                public string TypeName { get; private set; }
+                //public string Namespace { get; private set; }
+                public string Namespace()
+                {
+                    var i = TypeName.LastIndexOf('.');
+                    return i < 0 ? "" : TypeName.Substring(0, i);
+                }
+                public string BaseType()
+                {
+                    var i = TypeName.LastIndexOf('.') + 1;
+                    return TypeName.Substring(i <= 0 ? 0 : i);
+                }
+                public override string ToString()
+                {
+                    return TypeName;
+                }
+                internal InternalType Intern()
+                {
+                    return new InternalType(TypeName);
+                }
+            }
+            public sealed class InternalType : CompiledType
+            {
+                internal InternalType(string name)
+                    : base(name)
+                {
+                    Values = new Dictionary<string, string>();
+                    Functions = new Dictionary<string, CompiledFunction>();
+                }
+                /// <summary>
+                /// Map field name to value.
+                /// </summary>
+                public Dictionary<string, string> Values { get; private set; }
+                /// <summary>
+                /// Set of functions for this type.
+                /// </summary>
+                internal Dictionary<string, CompiledFunction> Functions { get; private set; }
+            }
+            public sealed class CompiledFunction
+            {
+                internal CompiledFunction(string name, CompiledType arg, CompiledType returnType)
+                {
+                    FunctionName = name;
+                    ArgType = arg;
+                    ReturnType = returnType;
+                    Cases = new Dictionary<string, string>();
+                }
+                public string FunctionName { get; private set; }
+                public CompiledType ArgType { get; private set; }
+                public CompiledType ReturnType { get; private set; }
+                /// <summary>
+                /// Maps ArgType.FieldName to a return expression.
+                /// </summary>
+                public Dictionary<string, string> Cases { get; private set; }
+            }
         }
 
         // Extract set of named tables into set of enums with appropriate extension methods
@@ -71,7 +186,7 @@ namespace DbCache
             var db = config[1];
             try
             {
-                run(Read(config), "out.cs", dbType, db);
+                run(Parse(config), "out.cs", dbType, db);
                 Console.WriteLine("Mapping successfully generated...");
             }
             catch (Exception ex)
@@ -80,50 +195,62 @@ namespace DbCache
                 Console.ReadLine();
             }
         }
-        static void run(IEnumerable<TableMapping> mappings, string file, string dbType, string db)
+        static void run(Dictionary<string, TableMapping> mappings, string file, string dbType, string db)
         {
+            var env = new Env();
             using (var conn = GetConn(dbType, db))
             {
                 conn.Open();
-                if (File.Exists(file)) File.Delete(file);
-                using (var op = File.CreateText(file))
+                foreach (var table in mappings.Values)
                 {
-                    op.WriteLine("using System;");
-                    // write out enum declaration with its stub
-                    foreach (var table in mappings)
+                    Compile(table, conn, env);
+                }
+            }
+            if (File.Exists(file)) File.Delete(file);
+            using (var op = File.CreateText(file))
+            {
+                op.WriteLine("using System;");
+                // write out enum declaration with its stub
+                foreach (var type in env.Types)
+                {
+                    var ns = type.Namespace();
+                    if (!string.IsNullOrEmpty(ns))
                     {
-                        var stub = MapTable(table, conn);
-                        if (!string.IsNullOrEmpty(table.Namespace))
-                        {
-                            op.WriteLine("namespace {0}", table.Namespace);
-                            op.WriteLine('{');
-                        }
-                        op.WriteLine("public enum {0}", table.Enum.ToString());
+                        op.WriteLine("namespace {0}", ns);
                         op.WriteLine('{');
-                        op.Write(stub.Enum.ToString());
-                        op.WriteLine('}');
+                    }
+                    op.WriteLine("public enum {0}", type.BaseType());
+                    op.WriteLine('{');
+                    foreach (var value in type.Values)
+                    {
+                        op.WriteLine("        {0} = {1},", value.Key, value.Value);
+                    }
+                    op.WriteLine('}');
 
-                        op.WriteLine("public static class {0}Extensions", table.Enum);
-                        op.WriteLine('{');
-                        foreach (var col in table.Columns.Values)
+                    op.WriteLine("public static class {0}Extensions", type.BaseType());
+                    op.WriteLine('{');
+                    foreach (var fn in type.Functions.Values)
+                    {
+                        op.WriteLine("    public static {0} {1}(this {2} value)",
+                                     fn.ReturnType, fn.FunctionName, fn.ArgType.BaseType());
+                        op.WriteLine("    {");
+                        op.WriteLine("        switch (value)");
+                        op.WriteLine("        {");
+                        foreach (var _case in fn.Cases)
                         {
-                            var map = stub.Extensions[col];
-                            op.WriteLine("    public static {0} {1}(this {2} value)",
-                                         col.ReturnType, col.Function, table.Enum);
-                            op.WriteLine("    {");
-                            op.WriteLine("        switch (value)");
-                            op.WriteLine("        {");
-                            op.Write(map.ToString());
-                            op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");", table.Enum);
-                            op.WriteLine("        }");
-                            op.WriteLine("    }");
+                            op.WriteLine("            case {0}.{1}: return {2};",
+                                         fn.ArgType.BaseType(), _case.Key, _case.Value);
                         }
-                        if (!string.IsNullOrEmpty(table.Namespace))
-                        {
-                            op.WriteLine('}');
-                        }
+                        op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");",
+                                     type.BaseType());
+                        op.WriteLine("        }");
+                        op.WriteLine("    }");
+                    }
+                    if (!string.IsNullOrEmpty(ns))
+                    {
                         op.WriteLine('}');
                     }
+                    op.WriteLine('}');
                 }
             }
         }
@@ -156,42 +283,37 @@ namespace DbCache
                 ? "default(" + expectedType + ")"
                 : expression.Replace("%" + col + "%", value);
         }
-        static Output MapTable(TableMapping t, DbConnection conn)
+        static void Compile(TableMapping table, DbConnection conn, Env env)
         {
-            var op = new Output
-            {
-                Enum = new StringBuilder(),
-                Extensions = new Dictionary<ColumnMapping, StringBuilder>()
-            };
-            
+            var type = env.Define(table.Enum);
             var cmd = conn.CreateCommand();
                 cmd.CommandText = string.Format(
                     "SELECT {0}, {1}, {2} FROM {3}",
-                    t.PK, t.Name, t.Columns.Keys.Format(","), t.Table);
+                    table.PK, table.Name, table.Columns.Keys.Format(","), table.Table);
             var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo);
 
             // build column stubs and update return type based on
             // column information, if not explicitly provided
-            foreach (var col in t.Columns.Values)
+            foreach (var col in table.Columns.Values)
             {
                 var i = reader.GetOrdinal(col.Column);
                 if (string.IsNullOrEmpty(col.ReturnType))
                 {
                     col.ReturnType = reader.GetFieldType(i).Name;
                 }
-                op.Extensions.Add(col, new StringBuilder());
+                env.Fun(col.Function, type, env.Extern(col.ReturnType));
             }
             // fill in enum and switch stubs
             foreach (IDataRecord row in reader)
             {
-                var pk = row.GetOrdinal(t.PK);
+                var pk = row.GetOrdinal(table.PK);
                 var enumType = row.GetDataTypeName(pk);
                 var val = quote(row.GetValue(pk), row.GetFieldType(pk));
-                var name = normalize(row.GetValue(row.GetOrdinal(t.Name)).ToString());
-                op.Enum.AppendFormat("    {0} = {1},{2}", name, val, Environment.NewLine);
+                var name = normalize(row.GetValue(row.GetOrdinal(table.Name)).ToString());
+                type.Values.Add(name, val);
 
                 // fill in switch stubs
-                foreach (var col in t.Columns.Values)
+                foreach (var col in table.Columns.Values)
                 {
                     var i = reader.GetOrdinal(col.Column);
                     var colVal = quote(row.GetValue(i), row.GetFieldType(i));
@@ -199,11 +321,10 @@ namespace DbCache
                     var exp = string.IsNullOrEmpty(col.Expression)
                             ? colVal
                             : substitute(col.Expression, col.Column, colVal, col.ReturnType);
-                    var sb = op.Extensions[col];
-                    sb.AppendFormat("            case {0}.{1}: return {2};{3}", t.Enum, name, exp, Environment.NewLine);
+                    var fn = env.Fun(col.Function, type, env.Extern(col.ReturnType));
+                        fn.Cases.Add(name, exp);
                 }
             }
-            return op;
         }
         static string[] split(string token, string input)
         {
@@ -232,8 +353,9 @@ namespace DbCache
         {
             if (cond) throw new ArgumentException(string.Format("ERROR: line {0}, {1}.", line+1, err));
         }
-        static IEnumerable<TableMapping> Read(string[] config)
+        static Dictionary<string, TableMapping> Parse(string[] config)
         {
+            var map = new Dictionary<string, TableMapping>();
             for (var i = 1; i < config.Length; ++i)
             {
                 if (config[i].StartsWith("::table"))
@@ -245,13 +367,13 @@ namespace DbCache
                     {
                         Table = tname,
                         Enum = table.FindByKey("enum", tname),
-                        Namespace = table.FindByKey("namespace", ""),
                         PK = table.FindByKey("pk", null),
                         Name = table.FindByKey("name", null),
                         Columns = new Dictionary<string,ColumnMapping>(),
                     };
                     for (var j = ++i; j < config.Length && !config[j].StartsWith("::"); ++j, ++i)
                     {
+                        if (config[j].StartsWith("--")) continue; // skip comments
                         error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, j);
                         var column = split("::", config[j]);
                         var name = column[0].Trim();
@@ -264,9 +386,10 @@ namespace DbCache
                             ReturnType = column.FindByKey("returnType", ""),
                         });
                     }
-                    yield return tableMap;
+                    map.Add(tableMap.Enum, tableMap);
                 }
             }
+            return map;
         }
     }
 }
