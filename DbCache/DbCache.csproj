@@ -45,6 +45,12 @@
   <ItemGroup>
     <Content Include="config.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\sasa\Sasa\Sasa.csproj">
+      <Project>{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}</Project>
+      <Name>Sasa</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

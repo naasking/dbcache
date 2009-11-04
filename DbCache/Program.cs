@@ -7,6 +7,8 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.OleDb;
+using Sasa.Linq;
+using Sasa.String;
 
 namespace DbCache
 {
@@ -21,6 +23,7 @@ namespace DbCache
             public string Enum { get; set; }
             public string Name { get; set; }
             public string PK { get; set; }
+            public string Namespace { get; set; }
             public Dictionary<string, ColumnMapping> Columns { get; set; }
         }
         /// <summary>
@@ -66,18 +69,35 @@ namespace DbCache
             //if (dbType.Length < 1) throw new ArgumentException("Please specify ::database = DbType, where DbType = SqlClient, OleDb, etc.");
             if (string.IsNullOrEmpty(config[1])) throw new ArgumentException("Missing database connection string.");
             var db = config[1];
-            var tables = Read(config);
+            try
+            {
+                run(Read(config), "out.cs", dbType, db);
+                Console.WriteLine("Mapping successfully generated...");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+            }
+        }
+        static void run(IEnumerable<TableMapping> mappings, string file, string dbType, string db)
+        {
             using (var conn = GetConn(dbType, db))
             {
                 conn.Open();
-                if (File.Exists("out.cs")) File.Delete("out.cs");
-                using (var op = File.CreateText("out.cs"))
+                if (File.Exists(file)) File.Delete(file);
+                using (var op = File.CreateText(file))
                 {
                     op.WriteLine("using System;");
                     // write out enum declaration with its stub
-                    foreach (var table in tables)
+                    foreach (var table in mappings)
                     {
                         var stub = MapTable(table, conn);
+                        if (!string.IsNullOrEmpty(table.Namespace))
+                        {
+                            op.WriteLine("namespace {0}", table.Namespace);
+                            op.WriteLine('{');
+                        }
                         op.WriteLine("public enum {0}", table.Enum.ToString());
                         op.WriteLine('{');
                         op.Write(stub.Enum.ToString());
@@ -97,6 +117,10 @@ namespace DbCache
                             op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");", table.Enum);
                             op.WriteLine("        }");
                             op.WriteLine("    }");
+                        }
+                        if (!string.IsNullOrEmpty(table.Namespace))
+                        {
+                            op.WriteLine('}');
                         }
                         op.WriteLine('}');
                     }
@@ -140,9 +164,10 @@ namespace DbCache
                 Extensions = new Dictionary<ColumnMapping, StringBuilder>()
             };
             
-            var cols = t.Columns.Aggregate("", (acc, col) => string.IsNullOrEmpty(acc) ? col.Key : acc + ", " + col.Key);
             var cmd = conn.CreateCommand();
-            cmd.CommandText = string.Format("SELECT {0}, {1}, {2} FROM {3}", t.PK, t.Name, cols, t.Table);
+                cmd.CommandText = string.Format(
+                    "SELECT {0}, {1}, {2} FROM {3}",
+                    t.PK, t.Name, t.Columns.Keys.Format(","), t.Table);
             var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo);
 
             // build column stubs and update return type based on
@@ -182,7 +207,7 @@ namespace DbCache
         }
         static string[] split(string token, string input)
         {
-            return input.Split(new string[] { token }, StringSplitOptions.RemoveEmptyEntries);
+            return input.Split(StringSplitOptions.RemoveEmptyEntries, token);
         }
         static DbConnection GetConn(string connType, string db)
         {
@@ -196,11 +221,16 @@ namespace DbCache
         {
             var v = from a in args
                     where a.StartsWith(key, StringComparison.InvariantCultureIgnoreCase)
+                       && !char.IsLetterOrDigit(a[key.Length])
                     let val = split("=", a)
                     select val[1].Trim();
-            var result = v.SingleOrDefault() ?? otherwise;
+            var result = v.FirstOrDefault() ?? otherwise;
             if (result == null) throw new ArgumentException("Missing " + key);
             return result;
+        }
+        static void error(bool cond, string err, int line)
+        {
+            if (cond) throw new ArgumentException(string.Format("ERROR: line {0}, {1}.", line+1, err));
         }
         static IEnumerable<TableMapping> Read(string[] config)
         {
@@ -209,24 +239,27 @@ namespace DbCache
                 if (config[i].StartsWith("::table"))
                 {
                     var table = split("::", config[i]);
-                    if (table.Length < 4) throw new InvalidOperationException("::table requires table, enum, pk, and name specified.");
+                    error(table.Length < 4, "::table requires table, enum, pk, and name specified.", i);
                     var tname = table.FindByKey("table", null);
                     var tableMap = new TableMapping
                     {
                         Table = tname,
                         Enum = table.FindByKey("enum", tname),
+                        Namespace = table.FindByKey("namespace", ""),
                         PK = table.FindByKey("pk", null),
                         Name = table.FindByKey("name", null),
                         Columns = new Dictionary<string,ColumnMapping>(),
                     };
                     for (var j = ++i; j < config.Length && !config[j].StartsWith("::"); ++j, ++i)
                     {
+                        error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, j);
                         var column = split("::", config[j]);
-                        tableMap.Columns.Add(column[0], new ColumnMapping
+                        var name = column[0].Trim();
+                        tableMap.Columns.Add(name, new ColumnMapping
                         {
                             Table = tableMap,
-                            Column = column[0],
-                            Function = column.FindByKey("function", column[0]),
+                            Column = name,
+                            Function = column.FindByKey("function", name),
                             Expression = column.FindByKey("expression", ""),
                             ReturnType = column.FindByKey("returnType", ""),
                         });
