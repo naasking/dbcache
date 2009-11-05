@@ -499,7 +499,7 @@ namespace DbCache
             var ws = true;
             foreach (var c in name)
             {
-                if (char.IsWhiteSpace(c))
+                if (!(char.IsLetterOrDigit(c) || c == '_'))
                 {
                     ws = true;
                     continue;
@@ -520,7 +520,7 @@ namespace DbCache
         static string substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
         {
             return string.IsNullOrEmpty(exp) ? quote(value):
-                   value.Instance == null    ? "default(" + expectedType + ")":
+                   value.Instance is DBNull  ? "default(" + expectedType + ")":
                                                exp.Replace("%" + col + "%", quote(value));
         }
         #region Database Schema
