@@ -1,0 +1,2376 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Sasa</name>
+    </assembly>
+    <members>
+        <member name="T:Sasa.EventExtensions">
+            <summary>
+            Extension methods to safely trigger events. Triggering them
+            using Raise() is both null-safe and thread-safe. Delegates
+            are still required to ensure the state they are accessing or
+            mutating is valid.
+            </summary>
+        </member>
+        <member name="M:Sasa.EventExtensions.RaiseAny(System.MulticastDelegate,System.Object[])">
+            <summary>
+            Safely raise any event.
+            </summary>
+            <param name="del">The multicast delegate representing the event.</param>
+            <param name="args">The arguments to the delegate.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``1(System.MulticastDelegate,System.Object,``0)">
+            <summary>
+            Safely raise any event whose sole argument inherits from EventArgs.
+            </summary>
+            <param name="del">The multicast delegate representing the event.</param>
+            <param name="sender">The event sender argument.</param>
+            <param name="arg">The event <see cref="T:System.EventArgs"/> argument.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise(System.EventHandler,System.Object,System.EventArgs)">
+            <summary>
+            Safely raise an EventHandler event.
+            </summary>
+            <param name="del">The delegate representing the event.</param>
+            <param name="sender">The object triggering the event.</param>
+            <param name="e">The event args.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+            Safely raise an EventHandler event.
+            </summary>
+            <typeparam name="T">The type of the EventArgs.</typeparam>
+            <param name="del">The delegate representing the event.</param>
+            <param name="sender">The object triggering the event.</param>
+            <param name="e">The event args.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise(System.Action)">
+            <summary>
+            Safely raise an Action event.
+            </summary>
+            <param name="del">The delegate representing the event.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``1(System.Action{``0},``0)">
+            <summary>
+            Safely raise an Action event.
+            </summary>
+            <typeparam name="T">The type of the argument to the event.</typeparam>
+            <param name="del">The delegate representing the event.</param>
+            <param name="arg0">The first event arg.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``2(System.Action{``0,``1},``0,``1)">
+            <summary>
+            Safely raise an Action event.
+            </summary>
+            <typeparam name="T">The type of the first argument to the event.</typeparam>
+            <typeparam name="U">The type of the second argument to the event.</typeparam>
+            <param name="del">The delegate representing the event.</param>
+            <param name="arg0">The first event arg.</param>
+            <param name="arg1">The second event arg.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``3(System.Action{``0,``1,``2},``0,``1,``2)">
+            <summary>
+            Safely raise an Action event.
+            </summary>
+            <typeparam name="T">The type of the first argument to the event.</typeparam>
+            <typeparam name="U">The type of the second argument to the event.</typeparam>
+            <typeparam name="V">The type of the third argument to the event.</typeparam>
+            <param name="del">The delegate representing the event.</param>
+            <param name="arg0">The first event arg.</param>
+            <param name="arg1">The second event arg.</param>
+            <param name="arg2">The third event arg.</param>
+        </member>
+        <member name="M:Sasa.EventExtensions.Raise``4(System.Action{``0,``1,``2,``3},``0,``1,``2,``3)">
+            <summary>
+            Safely raise an Action event.
+            </summary>
+            <typeparam name="T">The type of the first argument to the event.</typeparam>
+            <typeparam name="U">The type of the second argument to the event.</typeparam>
+            <typeparam name="V">The type of the third argument to the event.</typeparam>
+            <typeparam name="W">The type of the third argument to the event.</typeparam>
+            <param name="del">The delegate representing the event.</param>
+            <param name="arg0">The first event arg.</param>
+            <param name="arg1">The second event arg.</param>
+            <param name="arg2">The third event arg.</param>
+            <param name="arg3">The fourth event arg.</param>
+        </member>
+        <member name="T:Sasa.Collections.DictionaryExt">
+            <summary>
+            Useful extensions to the dictionary class.
+            </summary>
+        </member>
+        <member name="M:Sasa.Collections.DictionaryExt.Find``2(System.Collections.Generic.IDictionary{``0,``1},``0,``1)">
+            <summary>
+            Returns the value named by 'key', or inserts 'otherwise' into the dictionary and returns that.
+            </summary>
+            <typeparam name="K">The type of the key.</typeparam>
+            <typeparam name="T">The type of the value.</typeparam>
+            <param name="d">The dictionary.</param>
+            <param name="key">The dictionary key.</param>
+            <param name="otherwise">The value to insert and return if the key is not in the dictionary.</param>
+            <returns>d[key] if d contains key, and if not, it inserts (key, otherwise), and returns otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Collections.DictionaryExt.Insert``2(System.Collections.Generic.IDictionary{``0,``1},``0,``1)">
+            <summary>
+            Adds the value to the dictionary if it does not already exist.
+            </summary>
+            <typeparam name="K">The type of the key.</typeparam>
+            <typeparam name="T">The type of the value.</typeparam>
+            <param name="d">The dictionary.</param>
+            <param name="key">The dictionary key.</param>
+            <param name="value">The value to insert.</param>
+            <returns>True if the item was inserted, false if the key already exists.</returns>
+        </member>
+        <member name="M:Sasa.Collections.DictionaryExt.Get``2(System.Collections.Generic.IDictionary{``0,``1},``0,``1)">
+            <summary>
+            Returns the value named by 'key', or if no such entry exists, returns 'otherwise'.
+            </summary>
+            <typeparam name="K">The type of the key.</typeparam>
+            <typeparam name="T">The type of the value.</typeparam>
+            <param name="d">The dictionary.</param>
+            <param name="key">The dictionary key.</param>
+            <param name="otherwise">The value to insert and return if the key is not in the dictionary.</param>
+            <returns>Returns d[key] if it exists, or otherwise if it does not.</returns>
+        </member>
+        <member name="T:Sasa.Collections.Arrays">
+            <summary>
+            Array extensions.
+            </summary>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Append``1(``0[],``0[])">
+            <summary>
+            Append the values of two arrays into a new array.
+            </summary>
+            <typeparam name="T">The type in the array.</typeparam>
+            <param name="first">The first array.</param>
+            <param name="second">The second array.</param>
+            <returns>Returns a new array with the values of the first, followed by the values in the second.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Aggregate``2(``0[],``1,System.Func{``0,``1,``1})">
+            <summary>
+            A fold over an array.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <typeparam name="U">The return type.</typeparam>
+            <param name="array">The array.</param>
+            <param name="seed">The seed value.</param>
+            <param name="func">The function transforming the array.</param>
+            <returns>The value computed from the array.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Make``1(``0[])">
+            <summary>
+            A syntactic shortcut to create arrays of values leveraging type inference.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <param name="values">The values to create.</param>
+            <returns>An array of the provided values.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Eq``1(``0[],``0[])">
+            <summary>
+            Test two arrays for equality.
+            </summary>
+            <typeparam name="T">The type of the arrays.</typeparam>
+            <param name="a1">The first array.</param>
+            <param name="a2">The second array.</param>
+            <returns>True if the two arrays are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Slice``1(``0[],System.UInt32,System.UInt32)">
+            <summary>
+            Return a slice of an array delineated by the start and end indices.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <param name="array">The array to slice.</param>
+            <param name="start">The start of the slice.</param>
+            <param name="end">The end of the slice.</param>
+            <returns>The array slice.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Repeat``1(``0[],System.UInt32)">
+            <summary>
+            Returns a new array containing the entries of <paramref name="a"/> repeated for a
+            total length of <paramref name="count"/>.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <param name="array">The array to slice.</param>
+            <param name="start">The index at which to start duplicating elements.</param>
+            <returns>Returns <paramref name="a"/>.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Fill``1(``0[],``0,System.UInt32,System.UInt32)">
+            <summary>
+            Populates the given array with <paramref name="item"/>, starting at the given index
+            for <paramref name="count"/> entries.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <param name="array">The array.</param>
+            <param name="item">The item with which to fill the array.</param>
+            <param name="i">The index to start filling.</param>
+            <param name="count">The number of entries to set.</param>
+            <returns>Returns <paramref name="a"/>.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Dup``1(``0[])">
+            <summary>
+            Duplicates a given array.
+            </summary>
+            <typeparam name="T">The type of the array elements.</typeparam>
+            <param name="array">The array.</param>
+            <returns>A duplicate of the given array.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Arrays.Bound``1(``0[],System.UInt32)">
+            <summary>
+            Returns an array with the given length, seeded with the
+            <paramref name="a"/>.
+            </summary>
+            <typeparam name="T">The type of the array elements.</typeparam>
+            <param name="array">The array.</param>
+            <param name="count">The number of items in the returned array.</param>
+            <returns>An array of length <paramref name="count"/>.</returns>
+            <remarks>If <paramref name="count"/> equals a.Length, then the same array
+            is returned. If <paramref name="count"/> is greater than a.Length, then
+            a new array is created and seeded with the original values in <paramref name="a"/>
+            with the remainder of the array remaining uninitialized.</remarks>
+        </member>
+        <member name="T:Sasa.Weak`1">
+            <summary>
+            Exposes a strongly typed interface to an encapsulated WeakReference.
+            </summary>
+            <typeparam name="T">The type of the object in the WeakReference.</typeparam>
+        </member>
+        <member name="M:Sasa.Weak`1.#ctor(System.WeakReference)">
+            <summary>
+            Construct a typed weak reference from the given WeakReference.
+            </summary>
+            <param name="reference">The WeakReference to encapsulate.</param>
+            <exception cref="T:System.InvalidCastException">If the provided WeakReference does not point
+            to an object of type T.</exception>
+        </member>
+        <member name="M:Sasa.Weak`1.#ctor(`0)">
+            <summary>
+            Encapsulate the given object in a Weak ref.
+            </summary>
+            <param name="value">The object to encapsulate in a Weak reference.</param>
+        </member>
+        <member name="M:Sasa.Weak`1.Equals(`0)">
+            <summary>
+            Compares the given object for equality.
+            </summary>
+            <param name="other">The object to compare against.</param>
+            <returns>True if the underlying object is equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Weak`1.Equals(Sasa.Weak{`0})">
+            <summary>
+            Compares the given object for equality.
+            </summary>
+            <param name="other">The object to compare against.</param>
+            <returns>True if the underlying object is equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Weak`1.Equals(System.WeakReference)">
+            <summary>
+            Compares the given object for equality.
+            </summary>
+            <param name="other">The object to compare against.</param>
+            <returns>True if the underlying object is equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Weak`1.op_Implicit(`0)~Sasa.Weak{`0}">
+            <summary>
+            Implicitly convert a value of type T to a Weak ref if needed.
+            </summary>
+            <param name="value">The value to convert.</param>
+            <returns>A Weak reference to the value.</returns>
+        </member>
+        <member name="M:Sasa.Weak`1.op_Implicit(Sasa.Weak{`0})~`0">
+            <summary>
+            Implicitly extract the value encapsulated in the Weak ref.
+            </summary>
+            <param name="weak">The Weak reference from which to extract the value.</param>
+            <returns>The value encapsulated in the Weak ref.</returns>
+        </member>
+        <member name="M:Sasa.Weak`1.op_Implicit(Sasa.Weak{`0})~System.WeakReference">
+            <summary>
+            Implicitly extract the WeakReference encapsulated in the Weak value.
+            </summary>
+            <param name="weak">The Weak reference from which to extract the WeakReference.</param>
+            <returns>The WeakReference encapsulated in the Weak value.</returns>
+        </member>
+        <member name="P:Sasa.Weak`1.Value">
+            <summary>
+            Access the underlying value, if it still exists.
+            </summary>
+        </member>
+        <member name="P:Sasa.Weak`1.IsAlive">
+            <summary>
+            Returns true if the reference is still alive.
+            </summary>
+        </member>
+        <member name="T:Sasa.Pair`2">
+            <summary>
+            A 2-element tuple type.
+            </summary>
+            <typeparam name="T">Type of Pair.First.</typeparam>
+            <typeparam name="U">Type of Pair.Second.</typeparam>
+        </member>
+        <member name="M:Sasa.Pair`2.#ctor(`0,`1)">
+            <summary>
+            Construct a new Pair.
+            </summary>
+            <param name="first">Value of the first element.</param>
+            <param name="second">Value of the second element.</param>
+        </member>
+        <member name="M:Sasa.Pair`2.Bind(`0@,`1@)">
+            <summary>
+            Bind all tuple elements to locals.
+            </summary>
+            <param name="first">The first value.</param>
+            <param name="second">The second value.</param>
+        </member>
+        <member name="M:Sasa.Pair`2.ToKeyValue">
+            <summary>
+            Convert a Pair to a KeyValuePair.
+            </summary>
+            <returns>A KeyValuePair, where Key=First, Value=Second.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.Equals(Sasa.Pair{`0,`1})">
+            <summary>
+            Test Pair equality element-wise.
+            </summary>
+            <param name="other"></param>
+            <returns>True if the pairs are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.Equals(System.Object)">
+            <summary>
+            Test equality.
+            </summary>
+            <param name="obj">The object to compare to.</param>
+            <returns>True if the objects are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.GetHashCode">
+            <summary>
+            Compute hash code.
+            </summary>
+            <returns>Hash code for the encapsulated values.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.CompareTo(Sasa.Pair{`0,`1})">
+            <summary>
+            Compare the two values, Pair.First first, then Pair.Second if Pair.First are equal.
+            </summary>
+            <param name="other">The Pair to compare against.</param>
+            <returns>The ordering compares Pair.First first, and only compares Pair.Second if
+            Pair.First is equal and so cannot establish an ordering.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.ToString">
+            <summary>
+            Return a string representation of this Pair.
+            </summary>
+            <returns>A string representation of this Pair.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.op_Implicit(Sasa.Pair{`0,`1})~System.Collections.Generic.KeyValuePair{`0,`1}">
+            <summary>
+            Implicitly convert Pair to KeyValuePair.
+            </summary>
+            <param name="pair">The Pair to convert.</param>
+            <returns>A KeyValuePair, where Key=First, Value=Second.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.op_Implicit(System.Collections.Generic.KeyValuePair{`0,`1})~Sasa.Pair{`0,`1}">
+            <summary>
+            Implicitly convert KeyValuePair to Pair.
+            </summary>
+            <param name="pair">The KeyValuePair to convert.</param>
+            <returns>A new Pair instance, where First=Key, and Second=Value.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.op_Equality(Sasa.Pair{`0,`1},Sasa.Pair{`0,`1})">
+            <summary>
+            Compares two Pairs for equality.
+            </summary>
+            <param name="p1">The first Pair.</param>
+            <param name="p2">The second Pair.</param>
+            <returns>Returns true if the Pairs are equal, and false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Pair`2.op_Inequality(Sasa.Pair{`0,`1},Sasa.Pair{`0,`1})">
+            <summary>
+            Compares two Pairs for inequality.
+            </summary>
+            <param name="p1">The first Pair.</param>
+            <param name="p2">The second Pair.</param>
+            <returns>Returns true if the Pairs are not equal, and false otherwise.</returns>
+        </member>
+        <member name="P:Sasa.Pair`2.First">
+            <summary>
+            First element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Pair`2.Second">
+            <summary>
+            Second element of the tuple.
+            </summary>
+        </member>
+        <member name="T:Sasa.DecimalExt">
+            <summary>
+            Extension methods on System.Decimal.
+            </summary>
+        </member>
+        <member name="M:Sasa.DecimalExt.Bound(System.Decimal,System.Decimal,System.Decimal)">
+            <summary>
+            Bound the given Decimal by the upper and lower values.
+            </summary>
+            <param name="i">The value to bound.</param>
+            <param name="min">The lower inclusive bound.</param>
+            <param name="max">The upper inclusive bound.</param>
+            <returns>Returns i if <paramref name="min"/> &lt;= <paramref name="i"/> &lt;= <paramref name="max"/>,
+            or <paramref name="min"/> or <paramref name="max"/> if <paramref name="i"/> is out of that range.
+            </returns>
+        </member>
+        <member name="M:Sasa.DecimalExt.UpTo(System.Decimal,System.Decimal,System.Decimal)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <param name="step">The increment used from <paramref name="start"/> to <paramref name="end"/>.</param>
+            <returns>A stream of decimal from [<paramref name="start"/>, <paramref name="end"/>).</returns>
+        </member>
+        <member name="T:Sasa.Linq.Zip">
+            <summary>
+            Zip functions merge streams of values together into tuples.
+            </summary>
+        </member>
+        <member name="M:Sasa.Linq.Zip.ZipWith``3(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Func{``0,``1,``2})">
+            <summary>
+            Zip two streams to a user-defined type.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.Zip.ZipWith``4(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2},System.Func{``0,``1,``2,``3})">
+            <summary>
+            Zip three streams to a user-defined type.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="third">The third stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.Zip.ZipWith``5(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2},System.Collections.Generic.IEnumerable{``3},System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Zip four streams to a user-defined type.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="third">The third stream.</param>
+            <param name="fourth">The fourth stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="T:Sasa.Collections.Set`1">
+            <summary>
+            A simple set.
+            </summary>
+            <typeparam name="T">The type of the set's elements.</typeparam>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Union(`0)">
+            <summary>
+            Compute the union of the current set with the given item.
+            </summary>
+            <param name="item">The item to add to the set.</param>
+            <returns>A new set with the union of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Union(`0[])">
+            <summary>
+            Compute the union of all items.
+            </summary>
+            <param name="items">The items to add to the set.</param>
+            <returns>A new set with the union of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Contains(`0)">
+            <summary>
+            Checks the set for membership of an item.
+            </summary>
+            <param name="item">The item to check.</param>
+            <returns>Returns true if item is in the set.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Equals(Sasa.Collections.Set{`0})">
+            <summary>
+            Compares two sets for equality.
+            </summary>
+            <param name="other">The set to compare.</param>
+            <returns>Returns true if the two sets are equivalent.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Union(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Compute the union of all items.
+            </summary>
+            <param name="items">The items to add to the set.</param>
+            <returns>A new set with the union of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Union(Sasa.Collections.Set{`0})">
+            <summary>
+            Compute the union of all items.
+            </summary>
+            <param name="other">The other set whose items we add to the set.</param>
+            <returns>A new set with the union of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Intersect(`0[])">
+            <summary>
+            Compute the intersection of all items.
+            </summary>
+            <param name="items">The items to compare with the current set.</param>
+            <returns>A new set with the intersection of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Intersect(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Compute the intersection of all items.
+            </summary>
+            <param name="items">The items to compare with the current set.</param>
+            <returns>A new set with the intersection of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.GetEnumerator">
+            <summary>
+            Enumerate over all items in the set.
+            </summary>
+            <returns>An enumerator for the set.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Aggregate``1(``0,System.Func{`0,``0,``0})">
+            <summary>
+            Compute a value from all items of the set.
+            </summary>
+            <typeparam name="U">The type of value to compute.</typeparam>
+            <param name="seed">The initial accumulator value.</param>
+            <param name="func">The function to apply to each item in the set.</param>
+            <returns>The accumulated value.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.Intersect(Sasa.Collections.Set{`0})">
+            <summary>
+            Compute the intersection of all items.
+            </summary>
+            <param name="other">The set whose items to compare with the current set.</param>
+            <returns>A new set with the intersection of all items.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.op_BitwiseAnd(Sasa.Collections.Set{`0},Sasa.Collections.Set{`0})">
+            <summary>
+            The union of two sets.
+            </summary>
+            <param name="s1">The first set.</param>
+            <param name="s2">The second set.</param>
+            <returns>The union of <paramref name="s1"/> and <paramref name="s2"/>.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.op_BitwiseAnd(Sasa.Collections.Set{`0},`0)">
+            <summary>
+            The union of a set and a value.
+            </summary>
+            <param name="s1">The first set.</param>
+            <param name="item">The item to add to the set.</param>
+            <returns>The union of <paramref name="s1"/> and <paramref name="item"/>.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.op_ExclusiveOr(Sasa.Collections.Set{`0},Sasa.Collections.Set{`0})">
+            <summary>
+            The intersection of two sets.
+            </summary>
+            <param name="s1">The first set.</param>
+            <param name="s2">The second set.</param>
+            <returns>The intersection of <paramref name="s1"/> and <paramref name="s2"/>.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Set`1.ToString">
+            <summary>
+            Construct a string for the set.
+            </summary>
+            <returns>A string representation of the set.</returns>
+        </member>
+        <member name="P:Sasa.Collections.Set`1.IsEmpty">
+            <summary>
+            Returns true if the set is empty.
+            </summary>
+        </member>
+        <member name="T:Sasa.Collections.Set">
+            <summary>
+            Utility functions for the Set&lt;T&gt;.
+            </summary>
+        </member>
+        <member name="M:Sasa.Collections.Set.Make``1(``0[])">
+            <summary>
+            Construct an initial set from the list of items.
+            </summary>
+            <typeparam name="T">The type of the set.</typeparam>
+            <param name="items">The initial items with which to populate the set.</param>
+            <returns>A new set with the initial values.</returns>
+        </member>
+        <member name="T:Sasa.Quad`4">
+            <summary>
+            A 4-element tuple type.
+            </summary>
+            <typeparam name="T">The type of the first value.</typeparam>
+            <typeparam name="U">The type of the second value.</typeparam>
+            <typeparam name="V">The type of the third value.</typeparam>
+            <typeparam name="Q">The type of the fourth value.</typeparam>
+        </member>
+        <member name="M:Sasa.Quad`4.#ctor(`0,`1,`2,`3)">
+            <summary>
+            Construct a new Quad.
+            </summary>
+            <param name="first">The first value.</param>
+            <param name="second">The second value.</param>
+            <param name="third">The third value.</param>
+            <param name="fourth">The fourth value.</param>
+        </member>
+        <member name="M:Sasa.Quad`4.Bind(`0@,`1@,`2@,`3@)">
+            <summary>
+            Bind all tuple elements to locals.
+            </summary>
+            <param name="first">The first value.</param>
+            <param name="second">The second value.</param>
+            <param name="third">The third value.</param>
+            <param name="fourth">The fourth value.</param>
+        </member>
+        <member name="M:Sasa.Quad`4.Equals(Sasa.Quad{`0,`1,`2,`3})">
+            <summary>
+            Test equality of Quads element-wise.
+            </summary>
+            <param name="other">The other Quad to compare for equality.</param>
+            <returns>True if the Quad instances match, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.Equals(System.Object)">
+            <summary>
+            Test equality.
+            </summary>
+            <param name="obj">Object to compare for equality.</param>
+            <returns>True if the objects match, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.GetHashCode">
+            <summary>
+            Generate a hash code.
+            </summary>
+            <returns>The hash of the encapsulated values.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.CompareTo(Sasa.Quad{`0,`1,`2,`3})">
+            <summary>
+            Compare the two values, testing sequentially, Quad.First, Quad.Second
+            Quad.Third, and Quad.Fourth for any values that can specify an 
+            ordering.
+            </summary>
+            <param name="other">The Quad to compare against.</param>
+            <returns>The ordering compares sequentially Quad.First, Quad.Second,
+            Quad.Third and Quad.Fourth until it finds an entry that ensures an
+            total order.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.ToString">
+            <summary>
+            Return a string representation of this Quad.
+            </summary>
+            <returns>A string representation of this Quad.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.op_Equality(Sasa.Quad{`0,`1,`2,`3},Sasa.Quad{`0,`1,`2,`3})">
+            <summary>
+            Compares two Quads for equality.
+            </summary>
+            <param name="q1">The first Quad.</param>
+            <param name="q2">The second Quad.</param>
+            <returns>Returns true if the Quads are equal, and false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Quad`4.op_Inequality(Sasa.Quad{`0,`1,`2,`3},Sasa.Quad{`0,`1,`2,`3})">
+            <summary>
+            Compares two Quads for inequality.
+            </summary>
+            <param name="q1">The first Quad.</param>
+            <param name="q2">The second Quad.</param>
+            <returns>Returns true if the Quads are not equal, and false otherwise.</returns>
+        </member>
+        <member name="P:Sasa.Quad`4.First">
+            <summary>
+            First element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Quad`4.Second">
+            <summary>
+            Second element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Quad`4.Third">
+            <summary>
+            Third element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Quad`4.Fourth">
+            <summary>
+            Fourth element of the tuple.
+            </summary>
+        </member>
+        <member name="T:Sasa.TypeExtensions">
+            <summary>
+            Extensions to System.Type.
+            </summary>
+        </member>
+        <member name="M:Sasa.TypeExtensions.ToShortName(System.Type)">
+            <summary>
+            Return the shortest string required to identify a type.
+            </summary>
+            <param name="typ">The type to format as a string.</param>
+            <returns>A string representation of the type.</returns>
+        </member>
+        <member name="M:Sasa.TypeExtensions.ShortGenericType(System.Type,System.Type[],System.Text.StringBuilder)">
+            <summary>
+            Generates an abbreviated type name for a generic type definition with the specified
+            generic type arguments.
+            </summary>
+            <param name="typ">The generic type definition.</param>
+            <param name="genericArguments">The generic type arguments.</param>
+            <param name="sb">The StringBuilder to which the type string should be written.</param>
+            <returns>An abbreviated generic type name.</returns>
+        </member>
+        <member name="M:Sasa.TypeExtensions.ToShortName(System.Type,System.Text.StringBuilder)">
+            <summary>
+            Return the shortest string required to identify a type.
+            </summary>
+            <param name="typ">The type to format as a string.</param>
+            <param name="sb">The StringBuilder to which the type string should be written.</param>
+            <returns>A string representation of the type.</returns>
+        </member>
+        <member name="M:Sasa.TypeExtensions.ShortGenericType(System.Type,System.Type[])">
+            <summary>
+            Generates an abbreviated type name for a generic type definition with the specified
+            generic type arguments.
+            </summary>
+            <param name="typ">The generic type definition.</param>
+            <param name="genericArguments">The generic type arguments.</param>
+            <returns>An abbreviated generic type name.</returns>
+        </member>
+        <member name="M:Sasa.TypeExtensions.IsInstatiatedGenericType(System.Type)">
+            <summary>
+            Checks that the type is a generic type with all generic parameters specified.
+            </summary>
+            <param name="typ">The type to test.</param>
+            <returns>True if the type is instaniated with all generic parameters, false otherwise.</returns>
+        </member>
+        <member name="T:Sasa.Either`2">
+            <summary>
+            This type encapsulates either a value of type F, or a value of type S.
+            </summary>
+            <typeparam name="F">Possible 'First' type.</typeparam>
+            <typeparam name="S">Possible 'Second' type.</typeparam>
+        </member>
+        <member name="M:Sasa.Either`2.op_Implicit(`0)~Sasa.Either{`0,`1}">
+            <summary>
+            A value of type F can be implicitly converted to First.
+            </summary>
+            <param name="f">The value to implicitly convert.</param>
+            <returns>A new Either initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.op_Implicit(`1)~Sasa.Either{`0,`1}">
+            <summary>
+            A value of type S can be implicitly converted to Second.
+            </summary>
+            <param name="s">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.op_Explicit(Sasa.Either{`0,`1})~`0">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.op_Explicit(Sasa.Either{`0,`1})~`1">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.First(`0)">
+            <summary>
+            Returns an instances initialized to First.
+            </summary>
+            <param name="f">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.Second(`1)">
+            <summary>
+            Returns an instances initialized to Second.
+            </summary>
+            <param name="s">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.Do(System.Action{`0},System.Action{`1})">
+            <summary>
+            Perform an action on either type.
+            </summary>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+        </member>
+        <member name="M:Sasa.Either`2.Select``1(System.Func{`0,``0},System.Func{`1,``0})">
+            <summary>
+            Transform the F or S types into a T.
+            </summary>
+            <typeparam name="T">The type of the returned value.</typeparam>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+            <returns>The computed value.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.Select(`0)">
+            <summary>
+            If the type is F, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type F.</param>
+            <returns>The encapsulated F, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`2.Select(`1)">
+            <summary>
+            If the type is S, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type S.</param>
+            <returns>The encapsulated S, or 'otherwise'.</returns>
+        </member>
+        <member name="P:Sasa.Either`2.IsFirst">
+            <summary>
+            Returns true if encapsulated type is of type L.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`2.IsSecond">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`2._First">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`2._Second">
+            <summary>
+            The internal class representing the 'Second' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.NonNull`1">
+            <summary>
+            This class encapsulates a non-null reference. An of this class instance serves as evidence
+            that the encapsulated reference is not null.
+            </summary>
+            <typeparam name="T">The type of the encapsulated reference.</typeparam>
+            <remarks>Proper usage is to never create or declare NonNull types as locals. NonNull should
+            only be used to decorate method arguments. The only way an invalid instance of NonNull can
+            be created is when declaring it as a local:
+            ...
+            NonNull&lt;T&gt; foo;
+            ...
+            T bar = foo; // NullReferenceException
+            
+            When it comes to high assurance code, you should utilize Option and NonNull types for
+            method arguments, to declare which arguments may be null and which must necessarily be
+            non-null. The type checker will ensure that values are handled properly within the method,
+            and client code will receive the errors when passing in null references for NonNull values.
+            </remarks>
+        </member>
+        <member name="M:Sasa.NonNull`1.op_Implicit(`0)~Sasa.NonNull{`0}">
+            <summary>
+            Implicit null reference check and conversion from reference type T.
+            </summary>
+            <param name="value">The value to check for null.</param>
+            <returns>A NonNull instance if value is not null, or a NullReferenceException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.op_Implicit(Sasa.NonNull{`0})~`0">
+            <summary>
+            Implicit conversion back to a type T.
+            </summary>
+            <param name="t">The NonNull value to convert back to T.</param>
+            <returns>The encapsulated T value.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.Equals(`0)">
+            <summary>
+            Compare encapsulated values for equality.
+            </summary>
+            <param name="other">The value to compare against.</param>
+            <returns>True if values are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.Equals(Sasa.NonNull{`0})">
+            <summary>
+            Compare NonNull values for equality.
+            </summary>
+            <param name="other">The value to compare against.</param>
+            <returns>True if values are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.Equals(System.Object)">
+            <summary>
+            Compares equality of the encapsulated value and the given value.
+            </summary>
+            <param name="obj">The value to compare.</param>
+            <returns>True if the values are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.GetHashCode">
+            <summary>
+            Return the hash code of the encapsulated value.
+            </summary>
+            <returns>The hash code.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.ToString">
+            <summary>
+            Returns a string representation of the encapsulated value.
+            </summary>
+            <returns>Returns a string representation of the encapsulated value.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.op_Equality(Sasa.NonNull{`0},Sasa.NonNull{`0})">
+            <summary>
+            Compares two NonNull values for equality.
+            </summary>
+            <param name="n1">The first NonNull.</param>
+            <param name="n2">The second NonNull.</param>
+            <returns>Returns true if the NonNulls are equal, and false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.NonNull`1.op_Inequality(Sasa.NonNull{`0},Sasa.NonNull{`0})">
+            <summary>
+            Compares two NonNull values for inequality.
+            </summary>
+            <param name="n1">The first NonNull.</param>
+            <param name="n2">The second NonNull.</param>
+            <returns>Returns true if the NonNulls are not equal, and false otherwise.</returns>>
+        </member>
+        <member name="P:Sasa.NonNull`1.Value">
+            <summary>
+            Retrievies the encapsulated value.
+            </summary>
+        </member>
+        <member name="T:Sasa.IO.StreamExt">
+            <summary>
+            Extension methods to System.IO.Stream
+            </summary>
+        </member>
+        <member name="M:Sasa.IO.StreamExt.CopyTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Copy one stream to another.
+            </summary>
+            <param name="input">The input stream.</param>
+            <param name="output">The output stream.</param>
+        </member>
+        <member name="M:Sasa.IO.StreamExt.ToArray(System.IO.Stream)">
+            <summary>
+            Read the full stream into a byte array.
+            </summary>
+            <param name="s">The stream to read.</param>
+            <returns>The contents of the stream.</returns>
+        </member>
+        <member name="T:Sasa.DoubleExt">
+            <summary>
+            Extension methods on System.Double.
+            </summary>
+        </member>
+        <member name="M:Sasa.DoubleExt.Bound(System.Double,System.Double,System.Double)">
+            <summary>
+            Bound the given Double by the upper and lower values.
+            </summary>
+            <param name="i">The value to bound.</param>
+            <param name="min">The lower inclusive bound.</param>
+            <param name="max">The upper inclusive bound.</param>
+            <returns>Returns i if <paramref name="min"/> &lt;= <paramref name="i"/> &lt;= <paramref name="max"/>,
+            or <paramref name="min"/> or <paramref name="max"/> if <paramref name="i"/> is out of that range.
+            </returns>
+        </member>
+        <member name="M:Sasa.DoubleExt.UpTo(System.Double,System.Double,System.Double)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <param name="step">The increment used from <paramref name="start"/> to <paramref name="end"/>.</param>
+            <returns>A stream of decimal from [<paramref name="start"/>, <paramref name="end"/>).</returns>
+        </member>
+        <member name="T:Sasa.Collections.Seq`1">
+            <summary>
+            A purely functional list. null is also a valid sequence value that can be used to
+            construct lists, ie. value1 &amp; value2 &amp; null
+            </summary>
+            <typeparam name="T">The type of the sequence elements.</typeparam>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.#ctor(`0,Sasa.Collections.Seq{`0})">
+            <summary>
+            Construct a new sequence from a new head value and an existing list.
+            </summary>
+            <param name="e">The new value at the head of the list.</param>
+            <param name="tail">The remainder of the list.</param>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.op_BitwiseAnd(Sasa.Collections.Seq{`0},`0)">
+            <summary>
+            The sequence 'cons'/add operation, to construct a sequence from a new value and an existing list.
+            </summary>
+            <param name="t">The new value at the head of the list.</param>
+            <param name="l">The remainder of the list.</param>
+            <returns>A new sequence constructed from the given parameters.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.op_BitwiseAnd(Sasa.Collections.Seq{`0},Sasa.Collections.Seq{`0})">
+            <summary>
+            The sequence 'cons'/add operation, to construct a sequence from two lists.
+            </summary>
+            <param name="l1">The new value at the head of the list.</param>
+            <param name="l2">The remainder of the list.</param>
+            <returns>A new sequence constructed from the given parameters.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.op_BitwiseOr(Sasa.Collections.Seq{`0},`0)">
+            <summary>
+            Returns the value at the head of the sequence o, if o is not empty, or t otherwise. This is
+            the sequence equivalent of the ?? operator for null values.
+            </summary>
+            <param name="o">The sequence value to return if not empty.</param>
+            <param name="t">The value to return otherwise.</param>
+            <returns>Either the head of the list, or t.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.op_Implicit(`0)~Sasa.Collections.Seq{`0}">
+            <summary>
+            Implicitly convert a value into a one-element list.
+            </summary>
+            <param name="t">The value to implicitly convert.</param>
+            <returns>A single element list.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq`1.ToString">
+            <summary>
+            Return a string representation of the given list.
+            </summary>
+            <returns>String represetation of the list.</returns>
+        </member>
+        <member name="P:Sasa.Collections.Seq`1.Nil">
+            <summary>
+            Returns the 'nil' element indicating the end of the list.
+            </summary>
+        </member>
+        <member name="T:Sasa.Collections.Seq">
+            <summary>
+            Safe extension methods for purely functional lists.
+            </summary>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Aggregate``2(Sasa.Collections.Seq{``0},``1,System.Func{``0,``1,``1})">
+            <summary>
+            A fold over a sequence.
+            </summary>
+            <typeparam name="T">The type of the sequence.</typeparam>
+            <typeparam name="U">The return type.</typeparam>
+            <param name="seq">The sequence.</param>
+            <param name="seed">The seed value.</param>
+            <param name="func">The function transforming the sequence.</param>
+            <returns>The value computed from the sequence.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.IsEmpty``1(Sasa.Collections.Seq{``0})">
+            <summary>
+            Returns true if the sequence is empty.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <param name="l">The sequence to operate on.</param>
+            <returns>True if the sequence is empty, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Cons``1(Sasa.Collections.Seq{``0},``0)">
+            <summary>
+            Push an element on to the front of the list.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <param name="tail">The sequence to operate on.</param>
+            <param name="head">The new head of the list.</param>
+            <returns>A new list.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Enumerate``1(Sasa.Collections.Seq{``0})">
+            <summary>
+            Returns an enumerator over the given list.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <param name="l">The sequence to operate on.</param>
+            <returns>An enumeration over the list.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Contains``1(Sasa.Collections.Seq{``0},``0)">
+            <summary>
+            Checks whether a value is in the sequence.
+            </summary>
+            <typeparam name="T">The type of the elements.</typeparam>
+            <param name="seq">The sequence.</param>
+            <param name="value">The value to test.</param>
+            <returns>True if the element is in the sequence, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Select``2(Sasa.Collections.Seq{``0},``1,System.Func{``0,Sasa.Collections.Seq{``0},``1})">
+            <summary>
+            Apply an operation to a deconstructed list.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <typeparam name="R">The type of return value.</typeparam>
+            <param name="l">The sequence to operate on.</param>
+            <param name="otherwise">The value to return if the sequence is empty.</param>
+            <param name="cons">The function to invoke with the deconstructed head of the list.</param>
+            <returns>Returns cons(head, tail), or otherwise if the sequence is empty.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Select``1(Sasa.Collections.Seq{``0},``0)">
+            <summary>
+            Return the value at the head of the list.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <param name="l">The sequence to operate on.</param>
+            <param name="otherwise">The value to return if the sequence is empty.</param>
+            <returns>Returns the value at the head of the list, or 'otherwise' if the sequence is empty.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Do``1(Sasa.Collections.Seq{``0},System.Action{``0})">
+            <summary>
+            Enumerate over a list.
+            </summary>
+            <typeparam name="T">The element type of the list.</typeparam>
+            <param name="l">The sequence to operate on.</param>
+            <param name="f">The function to apply.</param>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Empty``1(``0)">
+            <summary>
+            Convenience method to create an empty sequence from a reference.
+            </summary>
+            <typeparam name="T">The type of the list.</typeparam>
+            <param name="reference">The reference type inference uses to resolve the type of the list.</param>
+            <returns>An empty list.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.ToString``1(Sasa.Collections.Seq{``0})">
+            <summary>
+            Return a string representation of the given list.
+            </summary>
+            <returns>String represetation of the list.</returns>
+        </member>
+        <member name="M:Sasa.Collections.Seq.Distinct``1(Sasa.Collections.Seq{``0})">
+            <summary>
+            Eliminate duplicates from a list.
+            </summary>
+            <typeparam name="T">The type of the elements in the list.</typeparam>
+            <param name="seq">The list.</param>
+            <returns>A list with no duplicates.</returns>
+        </member>
+        <member name="T:Sasa.Lazy`1">
+            <summary>
+            A thread-safe lazy value.
+            </summary>
+            <typeparam name="T">The type of the value to be lazily evaluated.</typeparam>
+            <remarks>In order for this to work correctly, the evaluation must be free of side-effects.</remarks>
+        </member>
+        <member name="M:Sasa.Lazy`1.#ctor(System.Func{`0})">
+            <summary>
+            Return a lazily value computed by invoked thunk().
+            </summary>
+            <param name="thunk">The function used to compute the value when required.</param>
+        </member>
+        <member name="M:Sasa.Lazy`1.#ctor(`0)">
+            <summary>
+            Return a resolved lazy value.
+            </summary>
+            <param name="v">The value to encapsulate in a lazy type.</param>
+        </member>
+        <member name="M:Sasa.Lazy`1.eval">
+            <summary>
+            Evaluate the thunk.
+            </summary>
+            <returns>The value returned from the thunk.</returns>
+        </member>
+        <member name="M:Sasa.Lazy`1.op_Implicit(System.Func{`0})~Sasa.Lazy{`0}">
+            <summary>
+            Implicitly construct a lazy value from a thunk.
+            </summary>
+            <param name="t">The thunk used to compute the lazy value.</param>
+            <returns>A lazily computed value.</returns>
+        </member>
+        <member name="M:Sasa.Lazy`1.op_Implicit(Sasa.Lazy{`0})~`0">
+            <summary>
+            Implicitly convert a lazy instance to a value by forcing it.
+            </summary>
+            <param name="t">The lazy value to convert.</param>
+            <returns>The lazily computed value.</returns>
+        </member>
+        <member name="P:Sasa.Lazy`1.Value">
+            <summary>
+            Force evaluation of the value.
+            </summary>
+            <returns>Returns the computed value.</returns>
+        </member>
+        <member name="T:Sasa.Either`4">
+            <summary>
+            This type encapsulates either a value of type F, S, T or U.
+            </summary>
+            <typeparam name="F">Possible 'First' type.</typeparam>
+            <typeparam name="S">Possible 'Second' type.</typeparam>
+            <typeparam name="T">Possible 'Third' type.</typeparam>
+            <typeparam name="U">Possible 'Fourth' type.</typeparam>
+        </member>
+        <member name="M:Sasa.Either`4.op_Implicit(`0)~Sasa.Either{`0,`1,`2,`3}">
+            <summary>
+            A value of type F can be implicitly converted to First.
+            </summary>
+            <param name="f">The value to implicitly convert.</param>
+            <returns>A new Either initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Implicit(`1)~Sasa.Either{`0,`1,`2,`3}">
+            <summary>
+            A value of type S can be implicitly converted to Second.
+            </summary>
+            <param name="s">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Implicit(`2)~Sasa.Either{`0,`1,`2,`3}">
+            <summary>
+            A value of type T can be implicitly converted to Third.
+            </summary>
+            <param name="t">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Third.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Implicit(`3)~Sasa.Either{`0,`1,`2,`3}">
+            <summary>
+            A value of type T can be implicitly converted to Fourth.
+            </summary>
+            <param name="u">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Third.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Explicit(Sasa.Either{`0,`1,`2,`3})~`0">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Explicit(Sasa.Either{`0,`1,`2,`3})~`1">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Explicit(Sasa.Either{`0,`1,`2,`3})~`2">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.op_Explicit(Sasa.Either{`0,`1,`2,`3})~`3">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.First(`0)">
+            <summary>
+            Returns an instances initialized to First.
+            </summary>
+            <param name="f">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Second(`1)">
+            <summary>
+            Returns an instances initialized to Second.
+            </summary>
+            <param name="s">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Third(`2)">
+            <summary>
+            Return an Either encapsulating a type T.
+            </summary>
+            <param name="t">The value to encapsulate.</param>
+            <returns>A newly initialized Either value.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Fourth(`3)">
+            <summary>
+            Return an Either encapsulating a type U.
+            </summary>
+            <param name="u">The value to encapsulate.</param>
+            <returns>A newly initialized Either value.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Do(System.Action{`0},System.Action{`1},System.Action{`2},System.Action{`3})">
+            <summary>
+            Perform an action on either type.
+            </summary>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+            <param name="third">Function to apply if encapsulated value is of type T.</param>
+            <param name="fourth">Function to apply if encapsulated value is of type U.</param>
+        </member>
+        <member name="M:Sasa.Either`4.Select``1(System.Func{`0,``0},System.Func{`1,``0},System.Func{`2,``0},System.Func{`3,``0})">
+            <summary>
+            Transform the F, S, or T types into a Q.
+            </summary>
+            <typeparam name="Q">The type to return.</typeparam>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+            <param name="third">Function to apply if encapsulated value is of type T.</param>
+            <param name="fourth">Function to apply if encapsulated value is of type U.</param>
+            <returns>The computed value.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Select(`0)">
+            <summary>
+            If the type is F, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type F.</param>
+            <returns>The encapsulated F, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Select(`1)">
+            <summary>
+            If the type is S, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type S.</param>
+            <returns>The encapsulated S, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Select(`2)">
+            <summary>
+            If the type is T, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type T.</param>
+            <returns>The encapsulated T, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`4.Select(`3)">
+            <summary>
+            If the type is U, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type U.</param>
+            <returns>The encapsulated U, or 'otherwise'.</returns>
+        </member>
+        <member name="P:Sasa.Either`4.IsFirst">
+            <summary>
+            Returns true if encapsulated type is of type L.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`4.IsSecond">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`4.IsThird">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`4.IsFourth">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`4._First">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`4._Second">
+            <summary>
+            The internal class representing the 'Second' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`4._Third">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`4._Fourth">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.String.StringExt">
+            <summary>
+            String extension methods.
+            </summary>
+        </member>
+        <member name="M:Sasa.String.StringExt.IsNullOrEmpty(System.String)">
+            <summary>
+            Returns true if string is null or empty.
+            </summary>
+            <param name="s">The string to test.</param>
+            <returns>True if the string is null or of length 0.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.IfNullOrEmpty(System.String,System.String)">
+            <summary>
+            Ensures returned string is not null or empty.
+            </summary>
+            <param name="s">The string to test.</param>
+            <param name="otherwise">The string to return if 's is null or empty.</param>
+            <returns>Returns the string if the not null or of length 0, or 'otherwise' otherwise.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Slice(System.String,System.Int32,System.Int32)">
+            <summary>
+            Return a slice of a string delineated by the start and end indices.
+            </summary>
+            <param name="s">The string to slice.</param>
+            <param name="start">The start of the slice.</param>
+            <param name="end">The end of the slice.</param>
+            <returns>The string slice.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.ToFilePath(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Returns a filesystem path given a stream of path components.
+            </summary>
+            <param name="components">The sequence of component paths.</param>
+            <returns>A file system path separated by the OS-specific separator character.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.ToFilePath(System.String[])">
+            <summary>
+            Returns a filesystem path given an array of path components.
+            </summary>
+            <param name="components">The array of component paths.</param>
+            <returns>A file system path separated by the OS-specific separator character.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.WordWrapAt(System.String,System.Int32)">
+            <summary>
+            Wraps the string at the given column index.
+            </summary>
+            <param name="s">The string to process.</param>
+            <param name="column">The column at which to wrap the string.</param>
+            <returns>A stream of strings representing the wrapped lines. String.Length is &lt;= column.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.HardWrapAt(System.String,System.Int32)">
+            <summary>
+            Wraps the string at the given column index.
+            </summary>
+            <param name="s">The string to process.</param>
+            <param name="column">The column at which to wrap the string.</param>
+            <returns>A stream of strings representing the wrapped lines. String.Length is &lt;= column.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Lines(System.String)">
+            <summary>
+            Returns the string split into individual lines.
+            </summary>
+            <param name="s">The string to split.</param>
+            <returns>An array of all the lines in the string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Words(System.String)">
+            <summary>
+            Returns an array split by whitespace.
+            </summary>
+            <param name="s">The string to split.</param>
+            <returns>An array of strings which were separate by whitespace in the original string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.ToBase64(System.String)">
+            <summary>
+            Convert a string to Base64.
+            </summary>
+            <param name="s">The string to convert.</param>
+            <returns>The Base64-encoded string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.FromBase64(System.String)">
+            <summary>
+            Convert a string from a Base64 encoded string to another string.
+            </summary>
+            <param name="s">The string the convert.</param>
+            <returns>The unencoded string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Chars(System.String)">
+            <summary>
+            A strongly typed enumerator over a string's characters.
+            </summary>
+            <param name="s">The string to enumerate.</param>
+            <returns>A typed enumerator over the string's characters.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Split(System.String,System.StringSplitOptions,System.Char[])">
+            <summary>
+            Split the string according to the given options and delimiters.
+            </summary>
+            <param name="input">The input string.</param>
+            <param name="options">The options to use when splitting the string.</param>
+            <param name="delimiter">The delimiters used to split the string.</param>
+            <returns>The split string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.Split(System.String,System.StringSplitOptions,System.String[])">
+            <summary>
+            Split the string according to the given options and delimiters.
+            </summary>
+            <param name="input">The input string.</param>
+            <param name="options">The options to use when splitting the string.</param>
+            <param name="delimiter">The delimiters used to split the string.</param>
+            <returns>The split string.</returns>
+        </member>
+        <member name="M:Sasa.String.StringExt.SliceEquals(System.String,System.Int32,System.String)">
+            <summary>
+            Checks the value of a substring.
+            </summary>
+            <param name="first">The string to inspect.</param>
+            <param name="start">The index at which to check for the substring.</param>
+            <param name="sub">The string to use for comparison.</param>
+            <returns>True if string <paramref name="sub"/> is found at <paramref name="first"/>[<paramref name="start"/>].</returns>
+        </member>
+        <member name="T:Sasa.Either`3">
+            <summary>
+            This type encapsulates either a value of type F, S or T.
+            </summary>
+            <typeparam name="F">Possible 'First' type.</typeparam>
+            <typeparam name="S">Possible 'Second' type.</typeparam>
+            <typeparam name="T">Possible 'Third' type.</typeparam>
+        </member>
+        <member name="M:Sasa.Either`3.op_Implicit(`0)~Sasa.Either{`0,`1,`2}">
+            <summary>
+            A value of type F can be implicitly converted to First.
+            </summary>
+            <param name="f">The value to implicitly convert.</param>
+            <returns>A new Either initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.op_Implicit(`1)~Sasa.Either{`0,`1,`2}">
+            <summary>
+            A value of type S can be implicitly converted to Second.
+            </summary>
+            <param name="s">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.op_Implicit(`2)~Sasa.Either{`0,`1,`2}">
+            <summary>
+            A value of type T can be implicitly converted to Third.
+            </summary>
+            <param name="t">The value to implicitly convert.</param>
+            <returns>A new Either initialized to Third.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.op_Explicit(Sasa.Either{`0,`1,`2})~`0">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.op_Explicit(Sasa.Either{`0,`1,`2})~`1">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.op_Explicit(Sasa.Either{`0,`1,`2})~`2">
+            <summary>
+            An explicit cast on an Either type ensures the cast is appropriate.
+            </summary>
+            <param name="e">The Either type to convert.</param>
+            <returns>The value encapsulated in the Either type, if the cast is appropriate, and
+            InvalidCastException otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.First(`0)">
+            <summary>
+            Returns an instances initialized to First.
+            </summary>
+            <param name="f">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to First.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Second(`1)">
+            <summary>
+            Returns an instances initialized to Second.
+            </summary>
+            <param name="s">The value used to initialize the Either type.</param>
+            <returns>An Either type initialized to Second.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Third(`2)">
+            <summary>
+            Return an Either encapsulating a type T.
+            </summary>
+            <param name="t">The value to encapsulate.</param>
+            <returns>A newly initialized Either value.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Do(System.Action{`0},System.Action{`1},System.Action{`2})">
+            <summary>
+            Perform an action on either type.
+            </summary>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+            <param name="third">Function to apply if encapsulated value is of type T.</param>
+        </member>
+        <member name="M:Sasa.Either`3.Select``1(System.Func{`0,``0},System.Func{`1,``0},System.Func{`2,``0})">
+            <summary>
+            Transform the F, S, or T types into a Q.
+            </summary>
+            <typeparam name="Q">The type to return.</typeparam>
+            <param name="first">Function to apply if encapsulated value is of type F.</param>
+            <param name="second">Function to apply if encapsulated value is of type S.</param>
+            <param name="third">Function to apply if encapsulated value is of type T.</param>
+            <returns>The computed value.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Select(`0)">
+            <summary>
+            If the type is F, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type F.</param>
+            <returns>The encapsulated F, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Select(`1)">
+            <summary>
+            If the type is S, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type S.</param>
+            <returns>The encapsulated S, or 'otherwise'.</returns>
+        </member>
+        <member name="M:Sasa.Either`3.Select(`2)">
+            <summary>
+            If the type is T, return the value, else return otherwise.
+            </summary>
+            <param name="otherwise">The value to return if Either is not of type T.</param>
+            <returns>The encapsulated T, or 'otherwise'.</returns>
+        </member>
+        <member name="P:Sasa.Either`3.IsFirst">
+            <summary>
+            Returns true if encapsulated type is of type L.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`3.IsSecond">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="P:Sasa.Either`3.IsThird">
+            <summary>
+            Returns true if encapsulated type is of type R.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`3._First">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`3._Second">
+            <summary>
+            The internal class representing the 'Second' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.Either`3._Third">
+            <summary>
+            The internal class representing the 'First' type.
+            </summary>
+        </member>
+        <member name="T:Sasa.SingleExt">
+            <summary>
+            Extension methods on System.Single.
+            </summary>
+        </member>
+        <member name="M:Sasa.SingleExt.Bound(System.Single,System.Single,System.Single)">
+            <summary>
+            Bound the given Single by the upper and lower values.
+            </summary>
+            <param name="i">The value to bound.</param>
+            <param name="min">The lower inclusive bound.</param>
+            <param name="max">The upper inclusive bound.</param>
+            <returns>Returns i if <paramref name="min"/> &lt;= <paramref name="i"/> &lt;= <paramref name="max"/>,
+            or <paramref name="min"/> or <paramref name="max"/> if <paramref name="i"/> is out of that range.
+            </returns>
+        </member>
+        <member name="M:Sasa.SingleExt.UpTo(System.Single,System.Single,System.Single)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <param name="step">The increment used from <paramref name="start"/> to <paramref name="end"/>.</param>
+            <returns>A stream of decimal from [<paramref name="start"/>, <paramref name="end"/>).</returns>
+        </member>
+        <member name="T:Sasa.Func.FuncExt">
+            <summary>
+            Typed delegate extension methods.
+            </summary>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``3(System.Func{``0,``1,``2})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a pair.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``4(System.Func{``0,``1,``2,``3})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a triple.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``5(System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a quad.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="Q">The type of the fourth argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``2(System.Action{``0,``1})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a pair.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``3(System.Action{``0,``1,``2})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a triple.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Single``4(System.Action{``0,``1,``2,``3})">
+            <summary>
+            Lift a multi-arg function to a single-arg function that takes a quad.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="Q">The type of the fourth argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``3(System.Func{``0,``1,``2})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``4(System.Func{``0,``1,``2,``3})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``5(System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="Q">The type of the fourth argument.</typeparam>
+            <typeparam name="R">The type of the return value.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``2(System.Action{``0,``1})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``3(System.Action{``0,``1,``2})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="M:Sasa.Func.FuncExt.Curry``4(System.Action{``0,``1,``2,``3})">
+            <summary>
+            Lift a multi-arg function to a single-arg curried function.
+            </summary>
+            <typeparam name="T">The type of the first argument.</typeparam>
+            <typeparam name="U">The type of the second argument.</typeparam>
+            <typeparam name="V">The type of the third argument.</typeparam>
+            <typeparam name="Q">The type of the fourth argument.</typeparam>
+            <param name="fn">The function to curry.</param>
+            <returns>A curried function.</returns>
+        </member>
+        <member name="T:Sasa.IntExt">
+            <summary>
+            Extensions for core int values.
+            </summary>
+        </member>
+        <member name="M:Sasa.IntExt.UpTo(System.Int32,System.Int32)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <returns>A stream of int from [start, end).</returns>
+        </member>
+        <member name="M:Sasa.IntExt.UpTo(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <param name="step">The incremental value.</param>
+            <returns>A stream of int from [start, end) incremented by 'step'.</returns>
+        </member>
+        <member name="M:Sasa.IntExt.UpTo(System.UInt32,System.UInt32)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The lower incusive bound of the stream.</param>
+            <param name="end">The upper exclusive bound of the stream.</param>
+            <returns>A stream of uint from [start, end).</returns>
+        </member>
+        <member name="M:Sasa.IntExt.DownTo(System.Int32,System.Int32)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The upper incusive bound of the stream.</param>
+            <param name="end">The lower exclusive bound of the stream.</param>
+            <returns>A stream of int from [start, end).</returns>
+        </member>
+        <member name="M:Sasa.IntExt.DownTo(System.UInt32,System.UInt32)">
+            <summary>
+            Returns a stream of numbers from start up to end.
+            </summary>
+            <param name="start">The upper incusive bound of the stream.</param>
+            <param name="end">The lower exclusive bound of the stream.</param>
+            <returns>A stream of int from [start, end).</returns>
+        </member>
+        <member name="M:Sasa.IntExt.Bound(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Bound the given int by the upper and lower values.
+            </summary>
+            <param name="i">The int to bound.</param>
+            <param name="min">The lower inclusive bound.</param>
+            <param name="max">The upper inclusive bound.</param>
+            <returns>Returns i if min &lt;= i &lt;= max, or min or max if i is out of that range.</returns>
+        </member>
+        <member name="T:Sasa.Option`1">
+            <summary>
+            This class represents an optional, possibly null, value.
+            </summary>
+            <typeparam name="T">The encapsulated value.</typeparam>
+            <remarks>
+            When it comes to high assurance code, you should utilize Option and NonNull types for
+            method arguments, to declare which arguments may be null and which must necessarily be
+            non-null. The type checker will ensure that values are handled properly within the method,
+            and client code will receive the errors when passing in null references for NonNull values.
+            </remarks>
+        </member>
+        <member name="M:Sasa.Option`1.op_Implicit(`0)~Sasa.Option{`0}">
+            <summary>
+            An implicit conversion from any value to an optional value. This will check
+            whether the value is a reference type or value type, and perform the necessary
+            checks.
+            </summary>
+            <param name="t">The value to be converted.</param>
+            <returns>Returns None if a null reference type, or Some otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Option`1.ToString">
+            <summary>
+            Return a string representation.
+            </summary>
+            <returns>A string representation of the optional value.</returns>
+        </member>
+        <member name="P:Sasa.Option`1.None">
+            <summary>
+            Returns the empty value for the option.
+            </summary>
+        </member>
+        <member name="T:Sasa.Option">
+            <summary>
+            Option operations.
+            </summary>
+        </member>
+        <member name="M:Sasa.Option.IsNone``1(Sasa.Option{``0})">
+            <summary>
+            Returns true if the value is None.
+            </summary>
+            <typeparam name="T">The type of the optional value.</typeparam>
+            <param name="o">The optional value.</param>
+            <returns>True if None.</returns>
+        </member>
+        <member name="M:Sasa.Option.IsSome``1(Sasa.Option{``0})">
+            <summary>
+            Returns true if the value is Some.
+            </summary>
+            <typeparam name="T">The type of the optional value.</typeparam>
+            <param name="o">The optional value.</param>
+            <returns>True if the option type encapsulates a real value.</returns>
+        </member>
+        <member name="M:Sasa.Option.Select``2(Sasa.Option{``0},System.Func{``0,``1})">
+            <summary>
+            Transforms the embedded value to a new value if it exists, otherwise
+            returns None.
+            </summary>
+            <typeparam name="T">The type of the optional value.</typeparam>
+            <typeparam name="R">The type of the returned optional value.</typeparam>
+            <param name="o">The optional value.</param>
+            <param name="some">The function to apply if 'o' has a value.</param>
+            <returns>Returns some(o) if o.IsSome, or None otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Option.Select``2(Sasa.Option{``0},System.Func{``0,``1},``1)">
+            <summary>
+            Performs a total match on the optional value and returns a new value.
+            </summary>
+            <typeparam name="T">The type of the encapsulated value.</typeparam>
+            <typeparam name="R">The type of the returned value.</typeparam>
+            <param name="o">The optional value.</param>
+            <param name="some">The function to call with the encapsulated value.</param>
+            <param name="none">The return value if optional value is None.</param>
+            <returns>A value computed from the given functions.</returns>
+        </member>
+        <member name="M:Sasa.Option.Select``2(Sasa.Option{``0},System.Func{``0,``1},System.Func{``1})">
+            <summary>
+            Performs a total match on the optional value and returns a new value.
+            </summary>
+            <typeparam name="T">The type of the encapsulated value.</typeparam>
+            <typeparam name="R">The type of the returned value.</typeparam>
+            <param name="o">The optional value.</param>
+            <param name="some">The function to call with the encapsulated value.</param>
+            <param name="none">The function to call if no value available.</param>
+            <returns>A value computed from the given functions.</returns>
+        </member>
+        <member name="M:Sasa.Option.Select``1(Sasa.Option{``0},``0)">
+            <summary>
+            Returns the encapsulated value if Some, returns 'none' otherwise.
+            </summary>
+            <typeparam name="T">The type of the optional value.</typeparam>
+            <param name="o">The optional value.</param>
+            <param name="none">The value to return if o.IsNone.</param>
+            <returns>The value encapsulated in the option if o.IsSome, 'none' otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Option.Do``1(Sasa.Option{``0},System.Action{``0})">
+            <summary>
+            Performs the given action on the embedded value if it exists.
+            </summary>
+            <typeparam name="T">The type of the optional value.</typeparam>
+            <param name="o">The optional value.</param>
+            <param name="f">The function to apply.</param>
+        </member>
+        <member name="T:Sasa.Enum.EnumExt">
+            <summary>
+            Extensions for System.Enum.
+            </summary>
+        </member>
+        <member name="M:Sasa.Enum.EnumExt.ToEnum``1(System.String)">
+            <summary>
+            Parses an enum value from the string representation.
+            </summary>
+            <typeparam name="E">The type of the enum.</typeparam>
+            <param name="e">The string representation of the enum.</param>
+            <returns>The enum corresponding to the string representation.</returns>
+        </member>
+        <member name="M:Sasa.Enum.EnumExt.IsDefined``1(``0)">
+            <summary>
+            Returns true if the value is valid for the given enum type.
+            </summary>
+            <typeparam name="E">The type of the enum.</typeparam>
+            <param name="e">The enum value to test.</param>
+            <returns>Returns true if the value is valid for the enum.</returns>
+        </member>
+        <member name="T:Sasa.Linq.ZipTuples">
+            <summary>
+            Zip functions merge streams of values together into tuples.
+            </summary>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip2``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1})">
+            <summary>
+            Pair the elements of two streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip3``3(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2})">
+            <summary>
+            Zip the elements of three streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="third">The third stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip4``4(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2},System.Collections.Generic.IEnumerable{``3})">
+            <summary>
+            Zip the elements of four streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="third">The third stream.</param>
+            <param name="fourth">The fourth stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip3``3(System.Collections.Generic.IEnumerable{Sasa.Pair{``0,``1}},System.Collections.Generic.IEnumerable{``2})">
+            <summary>
+            Zip a paired stream with a third stream.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip4``4(System.Collections.Generic.IEnumerable{Sasa.Pair{``0,``1}},System.Collections.Generic.IEnumerable{``2},System.Collections.Generic.IEnumerable{``3})">
+            <summary>
+            Zip a paired stream with two more streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="third">The third stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip4``4(System.Collections.Generic.IEnumerable{Sasa.Triple{``0,``1,``2}},System.Collections.Generic.IEnumerable{``3})">
+            <summary>
+            Zip a three element stream with a fourth stream.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.Zip4``4(System.Collections.Generic.IEnumerable{Sasa.Pair{``0,``1}},System.Collections.Generic.IEnumerable{Sasa.Pair{``2,``3}})">
+            <summary>
+            Zip two paired streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <returns>A stream of tupled values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.ZipWith``5(System.Collections.Generic.IEnumerable{Sasa.Pair{``0,``1}},System.Collections.Generic.IEnumerable{Sasa.Pair{``2,``3}},System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Zip two paired streams.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.ZipWith``4(System.Collections.Generic.IEnumerable{Sasa.Pair{``0,``1}},System.Collections.Generic.IEnumerable{``2},System.Func{``0,``1,``2,``3})">
+            <summary>
+            Zip a paired stream with a third stream.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="M:Sasa.Linq.ZipTuples.ZipWith``5(System.Collections.Generic.IEnumerable{Sasa.Triple{``0,``1,``2}},System.Collections.Generic.IEnumerable{``3},System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Zip a three element stream with a fourth stream.
+            </summary>
+            <typeparam name="T">The type of the first stream.</typeparam>
+            <typeparam name="U">The type of the second stream.</typeparam>
+            <typeparam name="V">The type of the third stream.</typeparam>
+            <typeparam name="Q">The type of the fourth stream.</typeparam>
+            <typeparam name="R">The type of the returned stream.</typeparam>
+            <param name="first">The first stream.</param>
+            <param name="second">The second stream.</param>
+            <param name="selector">The function mapping the given stream values into the return value.</param>
+            <returns>A stream of return values.</returns>
+        </member>
+        <member name="T:Sasa.Tuple">
+            <summary>
+            Tuple convenience functions.
+            </summary>
+        </member>
+        <member name="M:Sasa.Tuple.KV``2(``0,``1)">
+            <summary>
+            Construct a Pair from the given values.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <param name="t">The first value.</param>
+            <param name="u">The second value.</param>
+            <returns>A new Pair.</returns>
+        </member>
+        <member name="M:Sasa.Tuple._``2(``0,``1)">
+            <summary>
+            Construct a Pair from the given values.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <param name="t">The first value.</param>
+            <param name="u">The second value.</param>
+            <returns>A new Pair.</returns>
+        </member>
+        <member name="M:Sasa.Tuple._``3(``0,``1,``2)">
+            <summary>
+            Construct a Triple from the given values.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <typeparam name="V">The third type.</typeparam>
+            <param name="t">The first value.</param>
+            <param name="u">The second value.</param>
+            <param name="v">The third value.</param>
+            <returns>A new Triple.</returns>
+        </member>
+        <member name="M:Sasa.Tuple._``4(``0,``1,``2,``3)">
+            <summary>
+            Construct a Quad from the given values.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <typeparam name="V">The third type.</typeparam>
+            <typeparam name="Q">The fourth type.</typeparam>
+            <param name="t">The first value.</param>
+            <param name="u">The second value.</param>
+            <param name="v">The third value.</param>
+            <param name="q">The fourth value.</param>
+            <returns>A new Quad.</returns>
+        </member>
+        <member name="M:Sasa.Tuple.Flatten``4(Sasa.Pair{Sasa.Pair{``0,``1},Sasa.Pair{``2,``3}})">
+            <summary>
+            Flatten a nested pair of pairs into a Quad.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <typeparam name="V">The third type.</typeparam>
+            <typeparam name="Q">The fourth type.</typeparam>
+            <param name="nested">A nested tuple to flatten into a single tuple.</param>
+            <returns>A flattened tuple.</returns>
+        </member>
+        <member name="M:Sasa.Tuple.Flatten``3(Sasa.Pair{Sasa.Pair{``0,``1},``2})">
+            <summary>
+            Flatten a nested pair of a pair into a Triple.
+            </summary>
+            <typeparam name="T">The first type.</typeparam>
+            <typeparam name="U">The second type.</typeparam>
+            <typeparam name="V">The third type.</typeparam>
+            <param name="nested">A nested tuple to flatten into a single tuple.</param>
+            <returns>A flattened tuple.</returns>
+        </member>
+        <member name="M:Sasa.Tuple._``1(``0[])">
+            <summary>
+            A syntactic shortcut to create arrays of values leveraging type inference.
+            </summary>
+            <typeparam name="T">The type of the array.</typeparam>
+            <param name="values">The values to create.</param>
+            <returns>An array of the provided values.</returns>
+        </member>
+        <member name="T:Sasa.Triple`3">
+            <summary>
+            A three-element tuple.
+            </summary>
+            <typeparam name="T">First type.</typeparam>
+            <typeparam name="U">Second type.</typeparam>
+            <typeparam name="V">Third type.</typeparam>
+        </member>
+        <member name="M:Sasa.Triple`3.#ctor(`0,`1,`2)">
+            <summary>
+            Construct a new Triple.
+            </summary>
+            <param name="first">The first value.</param>
+            <param name="second">The second value.</param>
+            <param name="third">The third value.</param>
+        </member>
+        <member name="M:Sasa.Triple`3.Bind(`0@,`1@,`2@)">
+            <summary>
+            Bind all values to locals.
+            </summary>
+            <param name="first">The first value.</param>
+            <param name="second">The second value.</param>
+            <param name="third">The third value.</param>
+        </member>
+        <member name="M:Sasa.Triple`3.Equals(Sasa.Triple{`0,`1,`2})">
+            <summary>
+            Test Triple equality element-wise.
+            </summary>
+            <param name="other">The Triple to test for equality.</param>
+            <returns>True if equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.Equals(System.Object)">
+            <summary>
+            Test equality.
+            </summary>
+            <param name="obj">The object to compare.</param>
+            <returns>True if objects are equal, false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.GetHashCode">
+            <summary>
+            Compute hash code.
+            </summary>
+            <returns>Hash of the encapsulated values.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.CompareTo(Sasa.Triple{`0,`1,`2})">
+            <summary>
+            Compare the two values, sequentially Triple.First, then Triple.Second if
+            Triple.First are equal, then Triple.Third if Triple.Second is equal.
+            </summary>
+            <param name="other">The Triple to compare against.</param>
+            <returns>The ordering compares Triple.First first, and only compares
+            Triple.Second and Triple.Third if Triple.First is equal and so cannot
+            establish an ordering.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.ToString">
+            <summary>
+            Return a string representation of this Triple.
+            </summary>
+            <returns>String representation of this Triple.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.op_Equality(Sasa.Triple{`0,`1,`2},Sasa.Triple{`0,`1,`2})">
+            <summary>
+            Compares two Triples for equality.
+            </summary>
+            <param name="t1">The first Triple.</param>
+            <param name="t2">The second Triple.</param>
+            <returns>Returns true if the Triples are equal, and false otherwise.</returns>
+        </member>
+        <member name="M:Sasa.Triple`3.op_Inequality(Sasa.Triple{`0,`1,`2},Sasa.Triple{`0,`1,`2})">
+            <summary>
+            Compares two Triples for inequality.
+            </summary>
+            <param name="t1">The first Triple.</param>
+            <param name="t2">The second Triple.</param>
+            <returns>Returns true if the Triples are not equal, and false otherwise.</returns>
+        </member>
+        <member name="P:Sasa.Triple`3.First">
+            <summary>
+            First element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Triple`3.Second">
+            <summary>
+            Second element of the tuple.
+            </summary>
+        </member>
+        <member name="P:Sasa.Triple`3.Third">
+            <summary>
+            Third element of the tuple.
+            </summary>
+        </member>
+        <member name="T:Sasa.Linq.EnumerableExt">
+            <summary>
+            Extensions to IEnumerable.
+            </summary>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Do``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
+            <summary>
+            Applies f to each element of the collection.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The enumerator.</param>
+            <param name="f">The function to apply.</param>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Apply``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
+            <summary>
+            Applies f to each element of the collection without disrupting the stream.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The enumerator.</param>
+            <param name="f">The function to aplpy.</param>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Cons``1(``0,System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            IEnumerable is essentially a purely functional list, and this corresponds to the
+            ordinary 'cons' operation of appending to the head of the list.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="head">The new first element of the enumeration.</param>
+            <param name="tail">The rest of the enumeration.</param>
+            <returns>An enumeration with 'head' as the first value.</returns>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Append``1(System.Collections.Generic.IEnumerable{``0},``0)">
+            <summary>
+            IEnumerable is essentially a purely functional list, and this corresponds to an
+            append operation to the end of the list.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="tail">The enumeration being modified.</param>
+            <param name="last">The element being appended to the enumeration.</param>
+            <returns>An enumeration with a new last element.</returns>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Flatten``1(System.Collections.Generic.IEnumerable{System.Collections.Generic.IEnumerable{``0}})">
+            <summary>
+            Flattens a nested enumerable.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The nested enumerable.</param>
+            <returns>A flattened stream.</returns>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Format``1(System.Collections.Generic.IEnumerable{``0},System.String)">
+            <summary>
+            Formats each element of the stream with the given separator between them.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The input stream to format.</param>
+            <param name="separator">The element separating each element of the stream.</param>
+            <returns>A formatted string.</returns>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Format``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})">
+            <summary>
+            Formats each element of the stream with the given separator between them.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The input stream to format.</param>
+            <param name="separator">The element separating each element of the stream.</param>
+            <param name="toString">The function used to convert each element to a string.</param>
+            <returns>A formatted string.</returns>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Format``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Text.StringBuilder)">
+            <summary>
+            Formats each element of the stream with the given separator between them.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The input stream to format.</param>
+            <param name="separator">The element separating each element of the stream.</param>
+            <param name="output">The StringBuilder to which the output is written.</param>
+        </member>
+        <member name="M:Sasa.Linq.EnumerableExt.Format``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Text.StringBuilder,System.Func{``0,System.String})">
+            <summary>
+            Formats each element of the stream with the given separator between them.
+            </summary>
+            <typeparam name="T">The type being enumerated.</typeparam>
+            <param name="ie">The input stream to format.</param>
+            <param name="separator">The element separating each element of the stream.</param>
+            <param name="output">The StringBuilder to which the output is written.</param>
+            <param name="toString">The function used to convert each element to a string.</param>
+        </member>
+        <member name="T:Sasa.MetaExtensions">
+            <summary>
+            Various simple meta-programming extensions.
+            </summary>
+        </member>
+        <member name="M:Sasa.MetaExtensions.MemberName``1(System.Linq.Expressions.Expression{System.Func{``0}})">
+            <summary>
+            Exploits lambda expressions to ensure the field or property name returned as a
+            string is valid.
+            </summary>
+            <typeparam name="T">The type of the field or property.</typeparam>
+            <param name="property">A lambda expression naming a field or property.</param>
+            <returns>The name of the field or property.</returns>
+        </member>
+    </members>
+</doc>
