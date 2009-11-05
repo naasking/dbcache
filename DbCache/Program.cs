@@ -301,6 +301,17 @@ namespace DbCache
                 public TypExtern(string name) : base(name) { }
             }
             /// <summary>
+            /// Represents a constructor name.
+            /// </summary>
+            public struct Name
+            {
+                public string Value { get; set; }
+                public override string ToString()
+                {
+                    return Value;
+                }
+            }
+            /// <summary>
             /// Internal resolved type.
             /// </summary>
             public sealed class TypIntern : Typ
@@ -308,13 +319,13 @@ namespace DbCache
                 internal TypIntern(string name)
                     : base(name)
                 {
-                    Values = new Dictionary<string, string>();
+                    Values = new Dictionary<string, Name>();
                     Functions = new Dictionary<string, TypFun>();
                 }
                 /// <summary>
                 /// Map field name to value.
                 /// </summary>
-                public Dictionary<string, string> Values { get; private set; }
+                public Dictionary<string, Name> Values { get; private set; }
                 /// <summary>
                 /// Set of functions for this type.
                 /// </summary>
@@ -329,7 +340,7 @@ namespace DbCache
                 {
                     ArgType = arg;
                     ReturnType = returnType;
-                    Cases = new Dictionary<string, string>();
+                    Cases = new Dictionary<Name, string>();
                 }
                 /// <summary>
                 /// The input type of the function.
@@ -342,7 +353,7 @@ namespace DbCache
                 /// <summary>
                 /// Maps ArgType.FieldName to a return expression.
                 /// </summary>
-                public Dictionary<string, string> Cases { get; private set; }
+                public Dictionary<Name, string> Cases { get; private set; }
             }
         }
 
@@ -395,6 +406,7 @@ namespace DbCache
                 // included namespaces
                 op.WriteLine("using System;");
                 foreach (var ns in namespaces) op.WriteLine("using {0};", ns);
+                op.WriteLine();
 
                 // write out enum declaration with its stub
                 foreach (var type in env.Types)
@@ -407,40 +419,40 @@ namespace DbCache
                         op.WriteLine('{');
                     }
                     // write out enum definition
-                    op.WriteLine("public enum {0}", type.BaseType());
-                    op.WriteLine('{');
+                    op.WriteLine("    public enum {0}", type.BaseType());
+                    op.WriteLine("    {");
                     foreach (var value in type.Values)
                     {
-                        op.WriteLine("        {0} = {1},", value.Key, value.Value);
+                        op.WriteLine("        {0} = {1},", value.Value, value.Key);
                     }
-                    op.WriteLine('}');
+                    op.WriteLine("    }");
 
                     // write out any column functions, if applicable
                     if (type.Functions.Count > 0)
                     {
-                        op.WriteLine("public static class {0}Extensions", type.BaseType());
-                        op.WriteLine('{');
+                        op.WriteLine("    public static class {0}Extensions", type.BaseType());
+                        op.WriteLine("    {");
                         foreach (var fn in type.Functions)
                         {
                             // each function is an extension method which switches
                             // on the enum value and maps it to another value
 
-                            op.WriteLine("    public static {0} {1}(this {2} value)",
+                            op.WriteLine("        public static {0} {1}(this {2} value)",
                                          fn.Value.ReturnType, fn.Key, fn.Value.ArgType.BaseType());
-                            op.WriteLine("    {");
-                            op.WriteLine("        switch (value)");
                             op.WriteLine("        {");
+                            op.WriteLine("            switch (value)");
+                            op.WriteLine("            {");
                             foreach (var _case in fn.Value.Cases)
                             {
-                                op.WriteLine("            case {0}.{1}: return {2};",
+                                op.WriteLine("                case {0}.{1}: return {2};",
                                              fn.Value.ArgType.BaseType(), _case.Key, _case.Value);
                             }
-                            op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");",
+                            op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided.\");",
                                          type.BaseType());
+                            op.WriteLine("            }");
                             op.WriteLine("        }");
-                            op.WriteLine("    }");
                         }
-                        op.WriteLine('}');
+                        op.WriteLine("    }");
                     }
                     if (!string.IsNullOrEmpty(ns))
                     {
@@ -586,8 +598,8 @@ namespace DbCache
             {
                 // extract primary key value and description
                 var pk = quote(row.Cells[table.PK], data.Columns[table.PK]);
-                var pkname = normalize(row.Cells[table.Name].ToString());
-                type.Values[pkname] = pk;
+                var pkname = new Env.Name { Value = normalize(row.Cells[table.Name].ToString()) };
+                type.Values[pk] = pkname;
 
                 // fill in switch-statement stubs
                 foreach (var col in table.Columns)
@@ -604,9 +616,7 @@ namespace DbCache
                         // checks whether the fk value has materialized yet
                         // if not, it compiles it before continuing
                         var rt = returnedType as Env.TypIntern;
-                        var fkname = rt.Values.Where(v => v.Value == fk)
-                                              .Select(v => v.Key)
-                                              .Single();
+                        var fkname = rt.Values[fk];
                         // if returned type shares a namespace with arg type,
                         // then remove the shared part of the path
                         var ns = rt.Namespace();
