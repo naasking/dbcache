@@ -488,6 +488,19 @@ namespace DbCache
                    val is bool   ? val.ToString().ToLower():
                                    val.ToString();
         }
+        static string normalize(char c, bool skip)
+        {
+            switch (c)
+            {
+                case '%': return "Percent";
+                case '_':
+                case '-': return "_";
+                default:
+                    return !char.IsLetterOrDigit(c) ? null:
+                            skip && char.IsLower(c) ? char.ToUpper(c).ToString():
+                                                      c.ToString();
+            }
+        }
         /// <summary>
         /// Normalize the given string as a valid C# identifier.
         /// </summary>
@@ -496,16 +509,13 @@ namespace DbCache
         static string normalize(this string name)
         {
             var sb = new StringBuilder();
-            var ws = true;
-            foreach (var c in name)
+            var skip = true;
+            for (int i = 0; i < name.Length; ++i)
             {
-                if (!(char.IsLetterOrDigit(c) || c == '_'))
-                {
-                    ws = true;
-                    continue;
-                }
-                sb.Append(ws && char.IsLower(c) ? char.ToUpper(c) : c);
-                ws = false;
+                var w = normalize(name[i], skip);
+                if (w == null) { skip = true; continue; }
+                sb.Append(w);
+                skip = false;
             }
             return sb.ToString();
         }
