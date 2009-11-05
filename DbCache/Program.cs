@@ -685,6 +685,14 @@ namespace DbCache
             {
                 if (a.StartsWith("/out:")) cfg.OutputFile = a.Substring("/out:".Length);
                 else if (a.StartsWith("/in:")) config = File.ReadAllLines(a.Substring("/in:".Length));
+                else if (a.StartsWith("/?"))
+                {
+                    throw new ArgumentException(
+@"Usage: dbcache /in:<config> /out:<output>
+
+  /in:  input configuration file
+  /out:  output C# source code file");
+                }
             }
             error(config == null, "Please specify a config file via the /in: command-line argument.", null);
             // parse mapping file
