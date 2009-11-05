@@ -16,6 +16,15 @@ namespace DbCache
     static class Program
     {
         /// <summary>
+        /// Message describing how to use the program.
+        /// </summary>
+        const string usage =
+@"Usage: dbcache /in:<config> /out:<output>
+
+  /in:  input configuration file
+  /out:  output C# source code file";
+
+        /// <summary>
         /// Top-level configuration object.
         /// </summary>
         struct Config
@@ -369,7 +378,6 @@ namespace DbCache
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Console.ReadLine();
             }
         }
         #region Output function
@@ -666,7 +674,7 @@ namespace DbCache
         static void error(bool cond, string err, int? line)
         {
             if (cond) throw new ArgumentException(
-                line == null ? string.Format("ERROR: {0}", err):
+                line == null ? err:
                                string.Format("ERROR: line {0}, {1}.", line.Value+1, err));
         }
         /// <summary>
@@ -687,14 +695,11 @@ namespace DbCache
                 else if (a.StartsWith("/in:")) config = File.ReadAllLines(a.Substring("/in:".Length));
                 else if (a.StartsWith("/?"))
                 {
-                    throw new ArgumentException(
-@"Usage: dbcache /in:<config> /out:<output>
-
-  /in:  input configuration file
-  /out:  output C# source code file");
+                    throw new ArgumentException(usage);
                 }
             }
-            error(config == null, "Please specify a config file via the /in: command-line argument.", null);
+            // ensure we have input and output files
+            error(config == null || cfg.OutputFile == null, usage, null);
             // parse mapping file
             for (var i = 0; i < config.Length; ++i)
             {
