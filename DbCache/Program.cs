@@ -15,12 +15,26 @@ namespace DbCache
 {
     static class Program
     {
+        /// <summary>
+        /// Top-level configuration object.
+        /// </summary>
         struct Config
         {
+            /// <summary>
+            /// DB connection string.
+            /// </summary>
+            public string DB { get; set; }
+            /// <summary>
+            /// Database connection type.
+            /// </summary>
+            public string DbType { get; set; }
             /// <summary>
             /// Included namespaces.
             /// </summary>
             public List<string> Namespaces { get; set; }
+            /// <summary>
+            /// Table name to TableMapping map.
+            /// </summary>
             public Dictionary<string, TableMapping> Mappings { get; set; }
         }
         /// <summary>
@@ -64,6 +78,9 @@ namespace DbCache
             public string Expression { get; set; }
             public string ReturnType { get; set; }
         }
+        /// <summary>
+        /// Encapsulates all column and row data of a given table.
+        /// </summary>
         sealed class TableData
         {
             public TableData(string name)
@@ -76,6 +93,9 @@ namespace DbCache
             public Dictionary<string, Type> Columns { get; private set; }
             public List<RowData> Rows { get; private set; }
         }
+        /// <summary>
+        /// Encapsulates all data for a row in a given table.
+        /// </summary>
         sealed class RowData
         {
             public RowData()
@@ -206,16 +226,11 @@ namespace DbCache
         static void Main(string[] args)
         {
             var config = File.ReadAllLines("../../config.txt");
-            //if (!config[0].StartsWith("::database")) throw new ArgumentException("Config file must start with ::database connection string.");
-            var dbType = config.FindByKey("::database", null);
-            //if (dbType.Length < 1) throw new ArgumentException("Please specify ::database = DbType, where DbType = SqlClient, OleDb, etc.");
-            if (string.IsNullOrEmpty(config[1])) throw new ArgumentException("Missing database connection string.");
-            var db = config[1];
             try
             {
                 var env = new Env();
                 var cfg = Parse(config);
-                using (var conn = GetConn(dbType, db))
+                using (var conn = GetConn(cfg.DbType, cfg.DB))
                 {
                     conn.Open();
                     foreach (var table in cfg.Mappings.Values)
@@ -448,11 +463,22 @@ namespace DbCache
         {
             var map = new Dictionary<string, TableMapping>();
             var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
-            for (var i = 1; i < config.Length; ++i)
+            for (var i = 0; i < config.Length; ++i)
             {
-                if (config[i].StartsWith("::using"))
+                if (config[i].StartsWith("::database"))
                 {
-                    var ns = config[i].Split('=')[1].Trim();
+                    var line = config[i].Split('=');
+                    error(line.Length < 2, "Improper ::database declaration", i);
+                    var dbType = line[1].Trim();
+                    cfg.DbType = dbType;
+                    error(++i >= config.Length, "Missing ::database connection string", i);
+                    cfg.DB = config[i].Trim();
+                }
+                else if (config[i].StartsWith("::using"))
+                {
+                    var line = config[i].Split('=');
+                    error(line.Length < 2, "Improper ::using declaration", i);
+                    var ns = line[1].Trim();
                     cfg.Namespaces.Add(ns);
                 }
                 else if (config[i].StartsWith("::table"))
@@ -466,7 +492,7 @@ namespace DbCache
                         EnumFQN = table.FindByKey("enum", tname),
                         PK = table.FindByKey("pk", null),
                         Name = table.FindByKey("name", null),
-                        Columns = new Dictionary<string,ColumnMapping>(),
+                        Columns = new Dictionary<string, ColumnMapping>(),
                     };
                     for (var j = ++i; j < config.Length && !config[j].StartsWith("::"); ++j, ++i)
                     {
