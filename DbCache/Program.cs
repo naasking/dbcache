@@ -483,7 +483,7 @@ namespace DbCache
         static string quote(Env.Value value)
         {
             var val = value.Instance;
-            return val == null   ? "default(" + value.ExpectedType.FullName + ")":
+            return val.IsNull()  ? "default(" + value.ExpectedType.FullName + ")":
                    val is string ? "\"" + (val as string) + "\"":
                    val is bool   ? val.ToString().ToLower():
                                    val.ToString();
@@ -520,8 +520,17 @@ namespace DbCache
         static string substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
         {
             return string.IsNullOrEmpty(exp) ? quote(value):
-                   value.Instance is DBNull  ? "default(" + expectedType + ")":
+                   value.Instance.IsNull()   ? "default(" + expectedType + ")":
                                                exp.Replace("%" + col + "%", quote(value));
+        }
+        /// <summary>
+        /// Checks whether object is null or an instance of DBNull.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        static bool IsNull(this object o)
+        {
+            return o == null || o is DBNull;
         }
         #region Database Schema
         static void Schema(TableMapping table, DbConnection conn)
