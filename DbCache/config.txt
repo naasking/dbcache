@@ -8,9 +8,10 @@ PriceId::function = ToPrice::returnType = Price::expression = Price.Lookup(%Pric
 PartNamePostfix
 IsDisabled
 ::table = ProductStatus::enum = SpringAir.Products.Status::pk = StatusId::name = Description
-::table = Country::enum = SpringAir.Locale.Countries::pk = CountryId::name = Name
+::table = Country::enum = SpringAir.Locale.Country::pk = CountryId::name = Name
 CurrencyLabel
 Prefix
 Abbreviation
-::table = Currency::enum = SpringAir.Locale.Currencies::pk = CurrencyId::name = Name
+CurrencyId::function = Currency::returnType = SpringAir.Locale.Currency
+::table = Currency::enum = SpringAir.Locale.Currency::pk = CurrencyId::name = Name
 CultureName

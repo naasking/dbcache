@@ -643,7 +643,7 @@ namespace DbCache
                         // then remove the shared part of the path
                         var ns = rt.Namespace();
                         var qn = type.FQN.StartsWith(ns) ? rt.FQN.Substring(ns.Length + 1) : rt.FQN;
-                        exp = string.Format("{0}.{1}", qn, fkname);
+                        exp = string.Format("{0}.{1}", qn == col.Value.Function ? rt.FQN : qn, fkname);
                     }
                     else
                     {
