@@ -15,6 +15,14 @@ namespace DbCache
 {
     static class Program
     {
+        struct Config
+        {
+            /// <summary>
+            /// Included namespaces.
+            /// </summary>
+            public List<string> Namespaces { get; set; }
+            public Dictionary<string, TableMapping> Mappings { get; set; }
+        }
         /// <summary>
         /// A table to enum mapping declaration.
         /// </summary>
@@ -195,9 +203,6 @@ namespace DbCache
         // 2. construct SELECT query
         // 3. extract table schema from data reader
         // 4. output enum + static class with enum extension methods
-        //
-        // Config: map table=>enum, map column=>(function name, function map, return type)
-        //FIXME: should lookup FK constraints?
         static void Main(string[] args)
         {
             var config = File.ReadAllLines("../../config.txt");
@@ -209,21 +214,21 @@ namespace DbCache
             try
             {
                 var env = new Env();
-                var mappings = Parse(config);
+                var cfg = Parse(config);
                 using (var conn = GetConn(dbType, db))
                 {
                     conn.Open();
-                    foreach (var table in mappings.Values)
+                    foreach (var table in cfg.Mappings.Values)
                     {
                         Schema(table, conn);
                     }
                 }
-                TopLevel(mappings, env);
-                foreach (var table in mappings.Values)
+                TopLevel(cfg.Mappings, env);
+                foreach (var table in cfg.Mappings.Values)
                 {
-                    Functions(table, mappings, env);
+                    Functions(table, cfg.Mappings, env);
                 }
-                Output(env, "out.cs");
+                Output(env, "out.cs", cfg.Namespaces);
                 Console.WriteLine("Mapping successfully generated...");
             }
             catch (Exception ex)
@@ -232,12 +237,14 @@ namespace DbCache
                 Console.ReadLine();
             }
         }
-        static void Output(Env env, string file)
+        static void Output(Env env, string file, List<string> namespaces)
         {
             if (File.Exists(file)) File.Delete(file);
             using (var op = File.CreateText(file))
             {
                 op.WriteLine("using System;");
+                foreach (var ns in namespaces) op.WriteLine("using {0};", ns);
+
                 // write out enum declaration with its stub
                 foreach (var type in env.Types)
                 {
@@ -307,9 +314,9 @@ namespace DbCache
         }
         static string substitute(string expression, string col, string value, Env.CompiledType expectedType)
         {
-            return string.IsNullOrEmpty(value)
-                ? "default(" + expectedType + ")"
-                : expression.Replace("%" + col + "%", value);
+            return string.IsNullOrEmpty(expression) ? value:
+                   string.IsNullOrEmpty(value)      ? "default(" + expectedType + ")":
+                                                      expression.Replace("%" + col + "%", value);
         }
         static void Schema(TableMapping table, DbConnection conn)
         {
@@ -358,6 +365,8 @@ namespace DbCache
                 // argument and return types
                 foreach (var col in table.Columns.Values)
                 {
+                    // if return type provided, use that, else use type
+                    // of table column
                     var returnType = string.IsNullOrEmpty(col.ReturnType)
                                    ? table.Data.Columns[col.Column].FullName
                                    : col.ReturnType;
@@ -367,7 +376,6 @@ namespace DbCache
         }
         static void Functions(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
-            // load type
             var type = env.Define(table.EnumFQN);
             var data = table.Data;
 
@@ -385,6 +393,8 @@ namespace DbCache
                     var returnedType = fn.ReturnType;
                     var fk = quote(row.Cells[col.Column], data.Columns[col.Column]);
                     string exp;
+                    // if internal type, resolve foreign key value to enum name
+                    // else perform an expression substitution
                     if (returnedType is Env.InternalType)
                     {
                         // checks whether the fk value has materialized yet
@@ -401,9 +411,7 @@ namespace DbCache
                     else
                     {
                         // substitute escaped field value for quoted column name
-                        exp = string.IsNullOrEmpty(col.Expression)
-                            ? fk
-                            : substitute(col.Expression, col.Column, fk, returnedType);
+                        exp = substitute(col.Expression, col.Column, fk, returnedType);
                     }
                     fn.Cases.Add(enumName, exp);
                 }
@@ -436,12 +444,18 @@ namespace DbCache
         {
             if (cond) throw new ArgumentException(string.Format("ERROR: line {0}, {1}.", line+1, err));
         }
-        static Dictionary<string, TableMapping> Parse(string[] config)
+        static Config Parse(string[] config)
         {
             var map = new Dictionary<string, TableMapping>();
+            var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
             for (var i = 1; i < config.Length; ++i)
             {
-                if (config[i].StartsWith("::table"))
+                if (config[i].StartsWith("::using"))
+                {
+                    var ns = config[i].Split('=')[1].Trim();
+                    cfg.Namespaces.Add(ns);
+                }
+                else if (config[i].StartsWith("::table"))
                 {
                     var table = split("::", config[i]);
                     error(table.Length < 4, "::table requires table, enum, pk, and name specified.", i);
@@ -472,7 +486,7 @@ namespace DbCache
                     map.Add(tableMap.EnumFQN, tableMap);
                 }
             }
-            return map;
+            return cfg;
         }
     }
 }
