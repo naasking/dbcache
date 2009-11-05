@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbCache", "DbCache\DbCache.csproj", "{0A87C5D7-63EA-4279-98B1-18C2220D53D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sasa", "..\sasa\Sasa\Sasa.csproj", "{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,10 +13,6 @@ Global
 		{0A87C5D7-63EA-4279-98B1-18C2220D53D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A87C5D7-63EA-4279-98B1-18C2220D53D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A87C5D7-63EA-4279-98B1-18C2220D53D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B7E8BDE-CBFD-4A7D-90AA-0507DC060B11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

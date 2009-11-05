@@ -284,7 +284,7 @@ namespace DbCache
         }
         static string quote(object val, Type expected)
         {
-            return val == null   ? "default(" + expected.Name + ")":
+            return val == null   ? "default(" + expected.FullName + ")":
                    val is string ? "\"" + (val as string) + "\"":
                    val is bool   ? val.ToString().ToLower():
                                    val.ToString();
@@ -311,29 +311,38 @@ namespace DbCache
                 ? "default(" + expectedType + ")"
                 : expression.Replace("%" + col + "%", value);
         }
-        //static string resolve(string value, Env.CompiledType returnType, Env env)
-        //{
-        //}
         static void Schema(TableMapping table, DbConnection conn)
         {
             var cmd = conn.CreateCommand();
             cmd.CommandText = string.Format(
                 "SELECT {0}, {1}, {2} FROM {3}",
                 table.PK, table.Name, table.Columns.Keys.Format(","), table.Table);
+
+            // load all table values into TableData and DataRow
             using (var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo))
             {
+                // load column definitions, ie. names and types, starting with
+                // PK and name column
                 var data = new TableData(table.Name);
-                    table.Data = data;
+                    data.Columns.Add(table.PK, reader.GetFieldType(0));
+                    data.Columns.Add(table.Name, reader.GetFieldType(1));
+                table.Data = data;
+                foreach (var col in table.Columns.Values)
+                {
+                    var i = reader.GetOrdinal(col.Column);
+                    data.Columns.Add(col.Column, reader.GetFieldType(i));
+                }
+                // load row data, including PK and name columns
                 foreach (IDataRecord drow in reader)
                 {
                     var row = new RowData();
-                        data.Rows.Add(row);
+                        row.Cells.Add(table.PK, drow.GetValue(0));
+                        row.Cells.Add(table.Name, drow.GetValue(1));
+                    data.Rows.Add(row);
                     foreach (var col in table.Columns.Values)
                     {
                         var i = drow.GetOrdinal(col.Column);
-                        var type = drow.GetFieldType(i);
-                        var val = drow.GetValue(i);
-                        row.Cells.Add(col.Column, Tuple._(type, val));
+                        row.Cells.Add(col.Column, drow.GetValue(i));
                     }
                 }
             }
@@ -342,73 +351,61 @@ namespace DbCache
         {
             foreach (var table in mappings.Values)
             {
+                // declare top-level type
                 var type = env.Define(table.EnumFQN);
-                var data = new TableData(table.Name);
-                // build column stubs and update return type based on
-                // column information, if not explicitly provided
+
+                // build function signatures with explicitly typed
+                // argument and return types
                 foreach (var col in table.Columns.Values)
                 {
-                    if (string.IsNullOrEmpty(col.ReturnType))
-                    {
-                        col.ReturnType = table.Data.Rows.Name;
-                    }
-                    env.Fun(col.Function, type, env.Resolve(col.ReturnType));
-                }
-                foreach (IDataRecord drow in reader)
-                {
-                    var row = new RowData();
-                    foreach (var col in table.Columns.Values)
-                    {
-                        var i = drow.GetOrdinal(col.Column);
-                        row.Cells.Add(col.Column, drow.GetValue(i));
-                    }
-                    data.Rows.Add(row);
+                    var returnType = string.IsNullOrEmpty(col.ReturnType)
+                                   ? table.Data.Columns[col.Column].FullName
+                                   : col.ReturnType;
+                    env.Fun(col.Function, type, env.Resolve(returnType));
                 }
             }
         }
         static void Functions(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
+            // load type
             var type = env.Define(table.EnumFQN);
+            var data = table.Data;
 
             // fill in enum and switch stubs
-            using (var reader = Schema(table, conn))
+            foreach (var row in data.Rows)
             {
-                foreach (IDataRecord row in reader)
-                {
-                    var pk = row.GetOrdinal(table.PK);
-                    var enumType = row.GetDataTypeName(pk);
-                    var val = quote(row.GetValue(pk), row.GetFieldType(pk));
-                    var name = normalize(row.GetValue(row.GetOrdinal(table.Name)).ToString());
-                    type.Values.Add(name, val);
+                var pk = quote(row.Cells[table.PK], data.Columns[table.PK]);
+                var enumName = normalize(row.Cells[table.Name].ToString());
+                type.Values.Add(enumName, pk);
 
-                    // fill in switch stubs
-                    foreach (var col in table.Columns.Values)
+                // fill in switch-statement stubs
+                foreach (var col in table.Columns.Values)
+                {
+                    var fn = env.Fun(col.Function);
+                    var returnedType = fn.ReturnType;
+                    var fk = quote(row.Cells[col.Column], data.Columns[col.Column]);
+                    string exp;
+                    if (returnedType is Env.InternalType)
                     {
-                        var i = reader.GetOrdinal(col.Column);
-                        var returnedType = env.Resolve(col.ReturnType);
-                        var colVal = quote(row.GetValue(i), row.GetFieldType(i));
-                        var fn = env.Fun(col.Function, type, env.Resolve(col.ReturnType));
-                        string exp;
-                        if (returnedType is Env.InternalType)
+                        // checks whether the fk value has materialized yet
+                        // if not, it compiles it before continuing
+                        var rt = returnedType as Env.InternalType;
+                        if (!rt.Values.ContainsKey(fk))
                         {
-                            var rt = returnedType as Env.InternalType;
-                            if (!rt.Values.ContainsKey(colVal))
-                            {
-                                Functions(mappings.Values.Where(t => t.EnumFQN == rt.FQN).Single(),
-                                          mappings, conn, env);
-                            }
-                            var fkname = rt.Values[colVal];
-                            exp = string.Format("{0}.{1}", rt, fkname);
+                            Functions(mappings.Values.Where(t => t.EnumFQN == rt.FQN).Single(),
+                                      mappings, env);
                         }
-                        else
-                        {
-                            // substitute escaped field value for quoted column name
-                            exp = string.IsNullOrEmpty(col.Expression)
-                                ? colVal
-                                : substitute(col.Expression, col.Column, colVal, env.Resolve(col.ReturnType));
-                            fn.Cases.Add(name, exp);
-                        }
+                        var fkname = rt.Values[fk];
+                        exp = string.Format("{0}.{1}", rt, fkname);
                     }
+                    else
+                    {
+                        // substitute escaped field value for quoted column name
+                        exp = string.IsNullOrEmpty(col.Expression)
+                            ? fk
+                            : substitute(col.Expression, col.Column, fk, returnedType);
+                    }
+                    fn.Cases.Add(enumName, exp);
                 }
             }
         }
