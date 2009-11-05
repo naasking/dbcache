@@ -312,6 +312,18 @@ namespace DbCache
                 }
             }
             /// <summary>
+            /// A value paired with its expected type.
+            /// </summary>
+            public struct Value
+            {
+                public object Instance { get; set; }
+                public Type ExpectedType { get; set; }
+                public override string ToString()
+                {
+                    return Instance.ToString();
+                }
+            }
+            /// <summary>
             /// Internal resolved type.
             /// </summary>
             public sealed class TypIntern : Typ
@@ -319,13 +331,13 @@ namespace DbCache
                 internal TypIntern(string name)
                     : base(name)
                 {
-                    Values = new Dictionary<string, Name>();
+                    Values = new Dictionary<Value, Name>();
                     Functions = new Dictionary<string, TypFun>();
                 }
                 /// <summary>
                 /// Map field name to value.
                 /// </summary>
-                public Dictionary<string, Name> Values { get; private set; }
+                public Dictionary<Value, Name> Values { get; private set; }
                 /// <summary>
                 /// Set of functions for this type.
                 /// </summary>
@@ -468,9 +480,10 @@ namespace DbCache
         /// <param name="val"></param>
         /// <param name="expected"></param>
         /// <returns></returns>
-        static string quote(object val, Type expected)
+        static string quote(Env.Value value)
         {
-            return val == null   ? "default(" + expected.FullName + ")":
+            var val = value.Instance;
+            return val == null   ? "default(" + value.ExpectedType.FullName + ")":
                    val is string ? "\"" + (val as string) + "\"":
                    val is bool   ? val.ToString().ToLower():
                                    val.ToString();
@@ -499,16 +512,16 @@ namespace DbCache
         /// <summary>
         /// Perform a value or template substitution, depending on the given args.
         /// </summary>
-        /// <param name="expression"></param>
+        /// <param name="exp"></param>
         /// <param name="col"></param>
         /// <param name="value"></param>
         /// <param name="expectedType"></param>
         /// <returns></returns>
-        static string substitute(string expression, string col, string value, Env.Typ expectedType)
+        static string substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
         {
-            return string.IsNullOrEmpty(expression) ? value:
-                   string.IsNullOrEmpty(value)      ? "default(" + expectedType + ")":
-                                                      expression.Replace("%" + col + "%", value);
+            return string.IsNullOrEmpty(exp) ? quote(value):
+                   value.Instance == null    ? "default(" + expectedType + ")":
+                                               exp.Replace("%" + col + "%", quote(value));
         }
         #region Database Schema
         static void Schema(TableMapping table, DbConnection conn)
@@ -597,7 +610,7 @@ namespace DbCache
             foreach (var row in data.Rows)
             {
                 // extract primary key value and description
-                var pk = quote(row.Cells[table.PK], data.Columns[table.PK]);
+                var pk = new Env.Value { Instance = row.Cells[table.PK], ExpectedType = data.Columns[table.PK] };
                 var pkname = new Env.Name { Value = normalize(row.Cells[table.Name].ToString()) };
                 type.Values[pk] = pkname;
 
@@ -607,7 +620,7 @@ namespace DbCache
                     var fn = env.Fun(col.Value.Function);
                     // ensure Typ is fully resolved to a ground type
                     var returnedType = fn.ReturnType.Resolve(mappings, env);
-                    var fk = quote(row.Cells[col.Key], data.Columns[col.Key]);
+                    var fk = new Env.Value { Instance = row.Cells[col.Key], ExpectedType = data.Columns[col.Key] };
                     string exp;
                     // if internal type, resolve foreign key value to enum name
                     // else perform an expression substitution
