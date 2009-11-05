@@ -36,6 +36,10 @@ namespace DbCache
             /// Table name to TableMapping map.
             /// </summary>
             public Dictionary<string, TableMapping> Mappings { get; set; }
+            /// <summary>
+            /// The file to which the output is written.
+            /// </summary>
+            public string OutputFile { get; set; }
         }
         /// <summary>
         /// A table to enum mapping declaration.
@@ -325,7 +329,7 @@ namespace DbCache
             try
             {
                 var env = new Env();
-                var cfg = Parse(config);
+                var cfg = Parse(config, args);
                 using (var conn = GetConn(cfg.DbType, cfg.DB))
                 {
                     conn.Open();
@@ -338,7 +342,7 @@ namespace DbCache
                 {
                     Compile(table, cfg.Mappings, env);
                 }
-                Output(env, "out.cs", cfg.Namespaces);
+                Output(env, cfg.OutputFile, cfg.Namespaces);
                 Console.WriteLine("Mapping successfully generated...");
             }
             catch (Exception ex)
@@ -571,10 +575,17 @@ namespace DbCache
         {
             if (cond) throw new ArgumentException(string.Format("ERROR: line {0}, {1}.", line+1, err));
         }
-        static Config Parse(string[] config)
+        static Config Parse(string[] config, string[] args)
         {
             var map = new Dictionary<string, TableMapping>();
             var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
+            foreach (var a in args)
+            {
+                if (a.StartsWith("/out:"))
+                {
+                    cfg.OutputFile = a.Substring("/out:".Length);
+                }
+            }
             for (var i = 0; i < config.Length; ++i)
             {
                 if (config[i].StartsWith("::database"))
