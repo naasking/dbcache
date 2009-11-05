@@ -3,16 +3,7 @@ Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SA
 ::using = SpringAir
 ::using = SpringAir.Products
 ::using = SpringAir.Pricing
-::table = FilterType::enum = SpringAir.Products.FilterTypes::pk = FilterTypeId::name = FilterTypeName
-PriceId::function = ToPrice::returnType = Price::expression = Price.Lookup(%PriceId%)
-PartNamePostfix
-IsDisabled
-::table = ProductStatus::enum = SpringAir.Products.Status::pk = StatusId::name = Description
 ::table = Country::enum = SpringAir.Locale.Country::pk = CountryId::name = Name
-CurrencyLabel
-Prefix
-Abbreviation
-CurrencyId::function = Currency::returnType = SpringAir.Locale.Currency
-::table = Currency::enum = SpringAir.Locale.Currency::pk = CurrencyId::name = Name
-CultureName
-::table = VariableExhaust::enum = SpringAir.Products.VariableExhaust::pk = VariableExhaustId::name = Name
+Name
+::table = VariableExhaust::enum = SpringAir.Products.VariableExhausts::pk = VariableExhaustId::name = Name
+Name

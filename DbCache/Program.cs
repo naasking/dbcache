@@ -181,14 +181,18 @@ namespace DbCache
                 if (!(typ is TypIntern)) types[name] = typ = new TypIntern(name);
                 return typ as TypIntern;
             }
+            string mangle(string name, TypIntern arg)
+            {
+                return arg.FQN + "#" + name;
+            }
             /// <summary>
             /// Declare a function with the given name.
             /// </summary>
             /// <param name="name"></param>
             /// <returns></returns>
-            public TypFun Fun(string name)
+            public TypFun Fun(string name, TypIntern arg)
             {
-                return fns[name];
+                return fns[mangle(name, arg)];
             }
             /// <summary>
             /// Declare a function with the given name and argument and return types.
@@ -199,13 +203,14 @@ namespace DbCache
             /// <returns></returns>
             public TypFun Fun(string name, TypIntern arg, Typ returnType)
             {
-                if (!fns.ContainsKey(name))
+                var m = mangle(name, arg);
+                if (!fns.ContainsKey(m))
                 {
                     var fn = new TypFun(arg, returnType);
                     arg.Functions.Add(name, fn);
-                    fns[name] = fn;
+                    fns[m] = fn;
                 }
-                return Fun(name);
+                return Fun(name, arg);
             }
             /// <summary>
             /// We're generally only interested in internal types.
@@ -636,7 +641,7 @@ namespace DbCache
                 // fill in switch-statement stubs
                 foreach (var col in table.Columns)
                 {
-                    var fn = env.Fun(col.Value.Function);
+                    var fn = env.Fun(col.Value.Function, type);
                     // ensure Typ is fully resolved to a ground type
                     var returnedType = fn.ReturnType.Resolve(mappings, env);
                     var fk = new Env.Value { Instance = row.Cells[col.Key], ExpectedType = data.Columns[col.Key] };
