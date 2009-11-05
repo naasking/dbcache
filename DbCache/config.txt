@@ -6,3 +6,6 @@ Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SA
 PriceId::function = ToPrice::returnType = Price::expression = Price.Lookup(%PriceId%)
 PartNamePostfix
 IsDisabled
+::table = ProductStatus::enum = SpringAir.Products.ProductStatuses::pk = StatusId::name = Description
+PartStatusId::function = ToPartStatus::returnType = SpringAir.Products.PartStatuses
+::table = PartStatus::enum = SpringAir.Products.PartStatuses::pk = StatusId::name = Description

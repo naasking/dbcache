@@ -132,8 +132,8 @@ namespace DbCache
             Dictionary<string, TypFun> fns = new Dictionary<string, TypFun>();
 
             /// <summary>
-            /// Resolve a fully-qualified type name to a compiled type definition.
-            /// If no such type has yet been defined, it defaults to external linkage,
+            /// Resolve a fully-qualified type name to a final type definition.
+            /// If no internal type exists, it defaults to external linkage,
             /// meaning it is a predefined type that will not be filled from a table.
             /// </summary>
             /// <param name="name"></param>
@@ -144,9 +144,8 @@ namespace DbCache
                 return types[name];
             }
             /// <summary>
-            /// Resolve a fully-qualified type name to a compiled type definition.
-            /// If no such type has yet been defined, it defaults to external linkage,
-            /// meaning it is a predefined type that will not be filled from a table.
+            /// Creates a type variable, ie. a deferred type binding, if binding
+            /// does not already exist.
             /// </summary>
             /// <param name="name"></param>
             /// <returns></returns>
@@ -261,7 +260,7 @@ namespace DbCache
                 {
                     if (Underlying != null) return Underlying;
                     var table = mappings.Values.Where(t => t.EnumFQN == FQN).SingleOrDefault();
-                    if (table != null) Functions(table, mappings, env);
+                    if (table != null) Compile(table, mappings, env);
                     return Underlying = Env.Resolve(FQN);
                 }
             }
@@ -335,10 +334,9 @@ namespace DbCache
                         Schema(table, conn);
                     }
                 }
-                TopLevel(cfg.Mappings, env);
                 foreach (var table in cfg.Mappings.Values)
                 {
-                    Functions(table, cfg.Mappings, env);
+                    Compile(table, cfg.Mappings, env);
                 }
                 Output(env, "out.cs", cfg.Namespaces);
                 Console.WriteLine("Mapping successfully generated...");
@@ -375,30 +373,33 @@ namespace DbCache
                     }
                     op.WriteLine('}');
 
-                    op.WriteLine("public static class {0}Extensions", type.BaseType());
-                    op.WriteLine('{');
-                    foreach (var fn in type.Functions.Values)
+                    if (type.Functions.Count > 0)
                     {
-                        op.WriteLine("    public static {0} {1}(this {2} value)",
-                                     fn.ReturnType, fn.FunctionName, fn.ArgType.BaseType());
-                        op.WriteLine("    {");
-                        op.WriteLine("        switch (value)");
-                        op.WriteLine("        {");
-                        foreach (var _case in fn.Cases)
+                        op.WriteLine("public static class {0}Extensions", type.BaseType());
+                        op.WriteLine('{');
+                        foreach (var fn in type.Functions.Values)
                         {
-                            op.WriteLine("            case {0}.{1}: return {2};",
-                                         fn.ArgType.BaseType(), _case.Key, _case.Value);
+                            op.WriteLine("    public static {0} {1}(this {2} value)",
+                                         fn.ReturnType, fn.FunctionName, fn.ArgType.BaseType());
+                            op.WriteLine("    {");
+                            op.WriteLine("        switch (value)");
+                            op.WriteLine("        {");
+                            foreach (var _case in fn.Cases)
+                            {
+                                op.WriteLine("            case {0}.{1}: return {2};",
+                                             fn.ArgType.BaseType(), _case.Key, _case.Value);
+                            }
+                            op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");",
+                                         type.BaseType());
+                            op.WriteLine("        }");
+                            op.WriteLine("    }");
                         }
-                        op.WriteLine("            default: throw new ArgumentException(\"Invalid {0} provided.\");",
-                                     type.BaseType());
-                        op.WriteLine("        }");
-                        op.WriteLine("    }");
+                        op.WriteLine('}');
                     }
                     if (!string.IsNullOrEmpty(ns))
                     {
                         op.WriteLine('}');
                     }
-                    op.WriteLine('}');
                 }
             }
         }
@@ -436,9 +437,9 @@ namespace DbCache
         static void Schema(TableMapping table, DbConnection conn)
         {
             var cmd = conn.CreateCommand();
-            cmd.CommandText = string.Format(
-                "SELECT {0}, {1}, {2} FROM {3}",
-                table.PK, table.Name, table.Columns.Keys.Format(","), table.Table);
+                cmd.CommandText = string.Format(
+                    "SELECT {0} FROM {1}",
+                    table.PK.Cons(table.Name.Cons(table.Columns.Keys)).Format(","), table.Table);
 
             // load all table values into TableData and DataRow
             using (var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo))
@@ -478,25 +479,23 @@ namespace DbCache
             }
         }
         #endregion
-        static void TopLevel(Dictionary<string, TableMapping> mappings, Env env)
+        static void Compile(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
-            foreach (var table in mappings.Values)
-            {
-                // declare top-level type
-                var type = env.Define(table.EnumFQN);
+            // declare top-level type
+            var type = env.Define(table.EnumFQN);
 
-                // build function signatures with explicitly typed
-                // argument and return types
-                foreach (var col in table.Columns)
-                {
-                    // if return type provided, use that, else use type
-                    // of table column
-                    var returnType = string.IsNullOrEmpty(col.Value.ReturnType)
-                                   ? table.Data.Columns[col.Key].FullName
-                                   : col.Value.ReturnType;
-                    env.Fun(col.Value.Function, type, env.Var(returnType));
-                }
+            // build function signatures with explicitly typed
+            // argument and return types
+            foreach (var col in table.Columns)
+            {
+                // if return type provided, use that, else use type
+                // of table column
+                var returnType = string.IsNullOrEmpty(col.Value.ReturnType)
+                               ? table.Data.Columns[col.Key].FullName
+                               : col.Value.ReturnType;
+                env.Fun(col.Value.Function, type, env.Var(returnType));
             }
+            Functions(table, mappings, env);
         }
         static void Functions(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
@@ -506,15 +505,16 @@ namespace DbCache
             // fill in enum and switch stubs
             foreach (var row in data.Rows)
             {
+                // extract primary key value and description
                 var pk = quote(row.Cells[table.PK], data.Columns[table.PK]);
-                var enumName = normalize(row.Cells[table.Name].ToString());
-                type.Values.Add(enumName, pk);
+                var pkname = normalize(row.Cells[table.Name].ToString());
+                type.Values[pkname] = pk;
 
                 // fill in switch-statement stubs
                 foreach (var col in table.Columns)
                 {
                     var fn = env.Fun(col.Value.Function);
-                    // ensure Typ is fully resolved
+                    // ensure Typ is fully resolved to a ground type
                     var returnedType = fn.ReturnType.Resolve(mappings, env);
                     var fk = quote(row.Cells[col.Key], data.Columns[col.Key]);
                     string exp;
@@ -525,15 +525,21 @@ namespace DbCache
                         // checks whether the fk value has materialized yet
                         // if not, it compiles it before continuing
                         var rt = returnedType as Env.TypIntern;
-                        var fkname = rt.Values[fk];
-                        exp = string.Format("{0}.{1}", rt, fkname);
+                        var fkname = rt.Values.Where(v => v.Value == fk)
+                                              .Select(v => v.Key)
+                                              .Single();
+                        // if returned type shares a namespace with arg type,
+                        // then remove the shared part of the path
+                        var ns = rt.Namespace();
+                        var qn = type.FQN.StartsWith(ns) ? rt.FQN.Substring(ns.Length + 1) : rt.FQN;
+                        exp = string.Format("{0}.{1}", qn, fkname);
                     }
                     else
                     {
                         // substitute escaped field value for quoted column name
                         exp = substitute(col.Value.Expression, col.Key, fk, returnedType);
                     }
-                    fn.Cases.Add(enumName, exp);
+                    fn.Cases.Add(pkname, exp);
                 }
             }
         }
@@ -600,21 +606,21 @@ namespace DbCache
                         Name = table.FindByKey("name", null),
                         Columns = new Dictionary<string, ColumnMapping>(),
                     };
-                    for (var j = ++i; j < config.Length && !config[j].StartsWith("::"); ++j, ++i)
+                    for (++i; i < config.Length && !config[i].StartsWith("::"); ++i)
                     {
-                        if (config[j].StartsWith("--")) continue; // skip comments
-                        error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, j);
-                        var column = split("::", config[j]);
+                        //if (config[i].StartsWith("--")) continue; // skip comments
+                        error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, i);
+                        var column = split("::", config[i]);
                         var name = column[0].Trim();
                         tableMap.Columns.Add(name, new ColumnMapping
                         {
                             Table = tableMap,
-                            //Column = name,
                             Function = column.FindByKey("function", name),
                             Expression = column.FindByKey("expression", ""),
                             ReturnType = column.FindByKey("returnType", ""),
                         });
                     }
+                    --i; // undo the last increment after processing columns
                     map.Add(tableMap.EnumFQN, tableMap);
                 }
             }
