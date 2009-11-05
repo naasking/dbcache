@@ -347,11 +347,10 @@ namespace DbCache
         // 6. write the concrete types and functions to a C# file
         static void Main(string[] args)
         {
-            var config = File.ReadAllLines("../../config.txt");
             try
             {
                 var env = new Env();
-                var cfg = Parse(config, args);
+                var cfg = Parse(args);
                 using (var conn = GetConn(cfg.DbType, cfg.DB))
                 {
                     conn.Open();
@@ -664,9 +663,11 @@ namespace DbCache
         /// <param name="cond"></param>
         /// <param name="err"></param>
         /// <param name="line"></param>
-        static void error(bool cond, string err, int line)
+        static void error(bool cond, string err, int? line)
         {
-            if (cond) throw new ArgumentException(string.Format("ERROR: line {0}, {1}.", line+1, err));
+            if (cond) throw new ArgumentException(
+                line == null ? string.Format("ERROR: {0}", err):
+                               string.Format("ERROR: line {0}, {1}.", line.Value+1, err));
         }
         /// <summary>
         /// Parse the mapping files and command-line arguments.
@@ -674,18 +675,18 @@ namespace DbCache
         /// <param name="config"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        static Config Parse(string[] config, string[] args)
+        static Config Parse(string[] args)
         {
+            string[] config = null;
             var map = new Dictionary<string, TableMapping>();
             var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
             // parse command-line arguments
             foreach (var a in args)
             {
-                if (a.StartsWith("/out:"))
-                {
-                    cfg.OutputFile = a.Substring("/out:".Length);
-                }
+                if (a.StartsWith("/out:")) cfg.OutputFile = a.Substring("/out:".Length);
+                else if (a.StartsWith("/in:")) config = File.ReadAllLines(a.Substring("/in:".Length));
             }
+            error(config == null, "Please specify a config file via the /in: command-line argument.", null);
             // parse mapping file
             for (var i = 0; i < config.Length; ++i)
             {
