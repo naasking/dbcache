@@ -3,6 +3,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartArguments>/out:foo.cs</StartArguments>
+    <StartArguments>/out:out.cs</StartArguments>
   </PropertyGroup>
 </Project>
