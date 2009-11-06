@@ -10,6 +10,7 @@ using System.Data.OleDb;
 using Sasa;
 using Sasa.Linq;
 using Sasa.String;
+using Sasa.Collections;
 
 namespace DbCache
 {
@@ -55,6 +56,10 @@ namespace DbCache
         /// </summary>
         sealed class TableMapping
         {
+            public TableMapping()
+            {
+                Columns = new Dictionary<string, ColumnMapping>();
+            }
             /// <summary>
             /// Table name.
             /// </summary>
@@ -74,11 +79,15 @@ namespace DbCache
             /// <summary>
             /// Mapped table columns.
             /// </summary>
-            public Dictionary<string, ColumnMapping> Columns { get; set; }
+            public Dictionary<string, ColumnMapping> Columns { get; private set; }
             /// <summary>
             /// Cached table data.
             /// </summary>
             public TableData Data { get; set; }
+            /// <summary>
+            /// Attributes attached to the enum.
+            /// </summary>
+            public IEnumerable<string> Attributes { get; set; }
         }
         /// <summary>
         /// A column to extension method mapping declaration.
@@ -173,12 +182,12 @@ namespace DbCache
             /// </summary>
             /// <param name="name"></param>
             /// <returns></returns>
-            public TypIntern Define(string name)
+            public TypIntern Define(string name, IEnumerable<string> attributes)
             {
-                if (!types.ContainsKey(name)) types[name] = new TypIntern(name);
+                if (!types.ContainsKey(name)) types[name] = new TypIntern(name, attributes);
                 // promote to internal type on demand
                 var typ = types[name];
-                if (!(typ is TypIntern)) types[name] = typ = new TypIntern(name);
+                if (!(typ is TypIntern)) types[name] = typ = new TypIntern(name, attributes);
                 return typ as TypIntern;
             }
             string mangle(string name, TypIntern arg)
@@ -333,9 +342,10 @@ namespace DbCache
             /// </summary>
             public sealed class TypIntern : Typ
             {
-                internal TypIntern(string name)
+                internal TypIntern(string name, IEnumerable<string> attr)
                     : base(name)
                 {
+                    Attributes = attr;
                     Values = new Dictionary<Value, Name>();
                     Functions = new Dictionary<string, TypFun>();
                 }
@@ -347,6 +357,10 @@ namespace DbCache
                 /// Set of functions for this type.
                 /// </summary>
                 internal Dictionary<string, TypFun> Functions { get; private set; }
+                /// <summary>
+                /// Set of attributes.
+                /// </summary>
+                public IEnumerable<string> Attributes { get; private set; }
             }
             /// <summary>
             /// Functions on types.
@@ -406,6 +420,9 @@ namespace DbCache
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+#if DEBUG
+                Console.ReadLine();
+#endif
             }
         }
         #region Output function
@@ -436,6 +453,10 @@ namespace DbCache
                         op.WriteLine('{');
                     }
                     // write out enum definition
+                    foreach (var attr in type.Attributes)
+                    {
+                        op.WriteLine("    [{0}]", attr);
+                    }
                     op.WriteLine("    public enum {0}", type.BaseType());
                     op.WriteLine("    {");
                     foreach (var value in type.Values)
@@ -602,7 +623,7 @@ namespace DbCache
         static void Compile(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
             // declare top-level type
-            var type = env.Define(table.EnumFQN);
+            var type = env.Define(table.EnumFQN, table.Attributes);
 
             // build function signatures with explicitly typed
             // argument and return types
@@ -627,7 +648,7 @@ namespace DbCache
         /// <param name="env"></param>
         static void Functions(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
         {
-            var type = env.Define(table.EnumFQN);
+            var type = env.Define(table.EnumFQN, table.Attributes);
             var data = table.Data;
 
             // fill in enum and switch stubs
@@ -695,6 +716,19 @@ namespace DbCache
             }
         }
         /// <summary>
+        /// Search the given config values by key, and return the matches, if any.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        static IEnumerable<string> FindByKey(this string[] args, string key)
+        {
+            return from a in args
+                   where a.StartsWith(key, StringComparison.InvariantCultureIgnoreCase)
+                      && !char.IsLetterOrDigit(a[key.Length])
+                   select a.Substring(a.IndexOf('=') + 1).Trim();
+        }
+        /// <summary>
         /// Search the given config values by key, and return otherwise if key not found.
         /// </summary>
         /// <param name="args"></param>
@@ -703,13 +737,8 @@ namespace DbCache
         /// <returns></returns>
         static string FindByKey(this string[] args, string key, string otherwise)
         {
-            var v = from a in args
-                    where a.StartsWith(key, StringComparison.InvariantCultureIgnoreCase)
-                       && !char.IsLetterOrDigit(a[key.Length])
-                    let val = split("=", a)
-                    select val[1].Trim();
-            var result = v.FirstOrDefault() ?? otherwise;
-            if (result == null) throw new ArgumentException("Missing " + key);
+            var result = args.FindByKey(key).FirstOrDefault() ?? otherwise;
+            error(result == null, "Missing '" + key + "'.", null);
             return result;
         }
         /// <summary>
@@ -780,7 +809,7 @@ namespace DbCache
                         EnumFQN = table.FindByKey("enum", tname),
                         PK = table.FindByKey("pk", null),
                         Name = table.FindByKey("name", null),
-                        Columns = new Dictionary<string, ColumnMapping>(),
+                        Attributes = table.FindByKey("attr"),
                     };
                     // extract column info from mapping file
                     for (++i; i < config.Length && !config[i].StartsWith("::"); ++i)

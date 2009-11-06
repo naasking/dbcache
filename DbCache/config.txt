@@ -5,5 +5,5 @@ Data Source=localhost;user id=SpringApp;password=SpecAndQuote;Initial Catalog=SA
 ::using = SpringAir.Pricing
 ::table = Country::enum = SpringAir.Locale.Country::pk = CountryId::name = Name
 Name
-::table = VariableExhaust::enum = SpringAir.Products.VariableExhausts::pk = VariableExhaustId::name = Name
+::table = VariableExhaust::enum = SpringAir.Products.VariableExhausts::pk = VariableExhaustId::name = Name::attr = Flags::attr = Foo(Bar = "bla")
 Name
