@@ -667,26 +667,32 @@ namespace DbCache
                     var returnedType = fn.ReturnType.Resolve(mappings, env);
                     var fk = new Env.Value { Instance = row.Cells[col.Key], ExpectedType = data.Columns[col.Key] };
                     string exp;
-                    // if internal type, resolve foreign key value to enum name
-                    // else perform an expression substitution
-                    if (returnedType is Env.TypIntern)
+                    // if the column value is null, then the pattern match is not exhaustive,
+                    // and we throw an exception
+                    if (!fk.Instance.IsNull())
                     {
-                        // checks whether the fk value has materialized yet
-                        // if not, it compiles it before continuing
-                        var rt = returnedType as Env.TypIntern;
-                        var fkname = rt.Values[fk];
-                        // if returned type shares a namespace with arg type,
-                        // then remove the shared part of the path
-                        var ns = rt.Namespace();
-                        var qn = type.FQN.StartsWith(ns) ? rt.FQN.Substring(ns.Length + 1) : rt.FQN;
-                        exp = string.Format("{0}.{1}", qn == col.Value.Function ? rt.FQN : qn, fkname);
+                        // if internal type, resolve foreign key value to enum name
+                        // else perform an expression substitution
+                        if (returnedType is Env.TypIntern)
+                        {
+
+                            // checks whether the fk value has materialized yet
+                            // if not, it compiles it before continuing
+                            var rt = returnedType as Env.TypIntern;
+                            var fkname = rt.Values[fk];
+                            // if returned type shares a namespace with arg type,
+                            // then remove the shared part of the path
+                            var ns = rt.Namespace();
+                            var qn = type.FQN.StartsWith(ns) ? rt.FQN.Substring(ns.Length + 1) : rt.FQN;
+                            exp = string.Format("{0}.{1}", qn == col.Value.Function ? rt.FQN : qn, fkname);
+                        }
+                        else
+                        {
+                            // substitute escaped field value for quoted column name
+                            exp = substitute(col.Value.Expression, col.Key, fk, returnedType);
+                        }
+                        fn.Cases[pkname] = exp;
                     }
-                    else
-                    {
-                        // substitute escaped field value for quoted column name
-                        exp = substitute(col.Value.Expression, col.Key, fk, returnedType);
-                    }
-                    fn.Cases[pkname] = exp;
                 }
             }
         }
