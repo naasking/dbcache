@@ -528,6 +528,25 @@ namespace DbCache
             }
         }
         /// <summary>
+        /// If <paramref name="name"/> starts with a number, this function
+        /// parses that number and returns the index of the char after the
+        /// number ends.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="sb"></param>
+        /// <returns></returns>
+        static int skipNum(string name, StringBuilder sb)
+        {
+            int i = 0;
+            while(i < name.Length && char.IsDigit(name[i])) ++i;
+            if (i > 0)
+            {
+                var n = int.Parse(name.Substring(0, i));
+                sb.Append(normalize(Number.ToSentence(n)));
+            }
+            return i;
+        }
+        /// <summary>
         /// Normalize the given string as a valid C# identifier.
         /// </summary>
         /// <param name="name"></param>
@@ -536,7 +555,7 @@ namespace DbCache
         {
             var sb = new StringBuilder();
             var skip = true;
-            for (int i = 0; i < name.Length; ++i)
+            for (int i = skipNum(name, sb); i < name.Length; ++i)
             {
                 var w = normalize(name[i], skip);
                 if (w == null) { skip = true; continue; }

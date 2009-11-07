@@ -10,3 +10,6 @@ Description
 ::table = ProjectStatus::enum = SpringAir.Projects.ProjectStatuses::pk = StatusId::name = StatusDescription
 ProductStatus::returnType = SpringAir.Products.Status
 PartStatus::returnType = SpringAir.Parts.PartOutStatus
+::table = QuickShip::enum = SpringAir.Projects.QuickShipTypes::pk = QuickShipId::name = Description
+Description
+Multiplier
