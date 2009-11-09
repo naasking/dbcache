@@ -512,6 +512,8 @@ namespace DbCache
             return val.IsNull()  ? "default(" + value.ExpectedType.FullName + ")":
                    val is string ? "\"" + (val as string) + "\"":
                    val is bool   ? val.ToString().ToLower():
+                   val is decimal? val.ToString() + "M":
+                   val is float  ? val.ToString() + "F":
                                    val.ToString();
         }
         static string normalize(char c, bool skip)
