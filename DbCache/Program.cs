@@ -791,11 +791,19 @@ namespace DbCache
             string[] config = null;
             var map = new Dictionary<string, TableMapping>();
             var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
+            var included = new HashSet<string>();
+            string pwd = string.Empty;
             // parse command-line arguments
             foreach (var a in args)
             {
                 if (a.StartsWith("/out:")) cfg.OutputFile = a.Substring("/out:".Length);
-                else if (a.StartsWith("/in:")) config = File.ReadAllLines(a.Substring("/in:".Length));
+                else if (a.StartsWith("/in:"))
+                {
+                    var file = Path.GetFullPath(a.Substring("/in:".Length));
+                    included.Add(file);
+                    config = File.ReadAllLines(file);
+                    pwd = Path.GetDirectoryName(file);
+                }
                 else if (a.StartsWith("/?"))
                 {
                     throw new ArgumentException(usage);
@@ -803,10 +811,17 @@ namespace DbCache
             }
             // ensure we have input and output files
             error(config == null || cfg.OutputFile == null, usage, null);
+            return Parse(cfg, pwd, config, included);
+        }
+
+        static Config Parse(Config cfg, string pwd, string[] config, HashSet<string> included)
+        {
+            var map = cfg.Mappings;
             // parse mapping file
             for (var i = 0; i < config.Length; ++i)
             {
-                if (config[i].StartsWith("::database"))
+                var cmd = config[i];
+                if (cmd.StartsWith("::database"))
                 {
                     // declare the database type and connection string
                     var line = config[i].Split('=');
@@ -816,13 +831,21 @@ namespace DbCache
                     error(++i >= config.Length, "Missing ::database connection string", i);
                     cfg.DB = config[i].Trim();
                 }
-                else if (config[i].StartsWith("::using"))
+                else if (cmd.StartsWith("::using"))
                 {
                     // included namespaces in output file
                     var line = config[i].Split('=');
                     error(line.Length < 2, "Improper ::using declaration", i);
                     var ns = line[1].Trim();
                     cfg.Namespaces.Add(ns);
+                }
+                else if (cmd.StartsWith("::include "))
+                {
+                    var path = Path.Combine(pwd, cmd.Substring("::include ".Length));
+                    error(string.IsNullOrEmpty(path), "Please provide a valid ::include path.", i);
+                    error(!File.Exists(path), "File specified by ::include does not exist.", i);
+                    if (included.Contains(path)) continue;
+                    cfg = Parse(cfg, pwd, File.ReadAllLines(path), included);
                 }
                 else if (config[i].StartsWith("::table"))
                 {

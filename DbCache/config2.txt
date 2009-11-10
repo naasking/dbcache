@@ -1,0 +1,3 @@
+﻿::table = QuickShip::enum = SpringAir.Projects.QuickShipTypes::pk = QuickShipId::name = Description
+Description
+Multiplier
