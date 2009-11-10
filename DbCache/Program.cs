@@ -813,7 +813,14 @@ namespace DbCache
             error(config == null || cfg.OutputFile == null, usage, null);
             return Parse(cfg, pwd, config, included);
         }
-
+        /// <summary>
+        /// Process a config file.
+        /// </summary>
+        /// <param name="cfg">The configuration to use.</param>
+        /// <param name="pwd">Present working directory, from which all file ::include directives are resolved.</param>
+        /// <param name="config">The lines of the current config file being processed.</param>
+        /// <param name="included">The set of currently visited config files.</param>
+        /// <returns>An initialized configuration.</returns>
         static Config Parse(Config cfg, string pwd, string[] config, HashSet<string> included)
         {
             var map = cfg.Mappings;
