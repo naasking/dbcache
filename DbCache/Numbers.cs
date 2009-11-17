@@ -25,17 +25,23 @@ namespace DbCache
         /// <returns></returns>
         public static string ToSentence(int n)
         {
-            return n < 0            ? "Minus " + ToSentence(-n):
+            return n == 0 ? first[n] : Step(n);
+        }
+        // traverse the number recursively
+        public static string Step(int n)
+        {
+            return n < 0            ? "Minus " + Step(-n):
+                   n == 0           ? "":
                    n <= 19          ? first[n]:
-                   n <= 99          ? tens[n / 10 - 2] + " " + ToSentence(n % 10):
-                   n <= 199         ? "One Hundred " + ToSentence(n % 100):
-                   n <= 999         ? ToSentence(n / 100) + "Hundred " + ToSentence(n % 100):
-                   n <= 1999        ? "One Thousand " + ToSentence(n % 1000):
-                   n <= 999999      ? ToSentence(n / 1000) + "Thousand " + ToSentence(n % 1000):
-                   n <= 1999999     ? "One Million " + ToSentence(n % 1000000):
-                   n <= 999999999   ? ToSentence(n / 1000000) + "Million " + ToSentence(n % 1000000):
-                   n <= 1999999999  ? "One Billion " + ToSentence(n % 1000000000):
-                                      ToSentence(n / 1000000000) + "Billion " + ToSentence(n % 1000000000);
+                   n <= 99          ? tens[n / 10 - 2] + " " + Step(n % 10):
+                   n <= 199         ? "One Hundred " + Step(n % 100):
+                   n <= 999         ? Step(n / 100) + "Hundred " + Step(n % 100):
+                   n <= 1999        ? "One Thousand " + Step(n % 1000):
+                   n <= 999999      ? Step(n / 1000) + "Thousand " + Step(n % 1000):
+                   n <= 1999999     ? "One Million " + Step(n % 1000000):
+                   n <= 999999999   ? Step(n / 1000000) + "Million " + Step(n % 1000000):
+                   n <= 1999999999  ? "One Billion " + Step(n % 1000000000):
+                                      Step(n / 1000000000) + "Billion " + Step(n % 1000000000);
         }
     }
 }

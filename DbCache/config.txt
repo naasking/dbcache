@@ -11,3 +11,4 @@ Description
 ProductStatus::returnType = SpringAir.Products.Status
 PartStatus::returnType = SpringAir.Parts.PartOutStatus
 ::include config2.txt
+::table = PaymentTerms::enum = SpringAir.Customers.PaymentTerms::pk = PaymentTermsId::name = Description
