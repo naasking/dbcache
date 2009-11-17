@@ -21,8 +21,8 @@ namespace DbCache
         /// <summary>
         /// Converts the given number to an english sentence.
         /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
+        /// <param name="n">The number to convert.</param>
+        /// <returns>The string representation of the number.</returns>
         public static string ToSentence(int n)
         {
             return n == 0 ? first[n] : Step(n);
