@@ -41,7 +41,7 @@ namespace DbCache
             /// <summary>
             /// Included namespaces.
             /// </summary>
-            public List<string> Namespaces { get; set; }
+            public HashSet<string> Namespaces { get; set; }
             /// <summary>
             /// Table name to TableMapping map.
             /// </summary>
@@ -432,7 +432,7 @@ namespace DbCache
         /// <param name="env"></param>
         /// <param name="file"></param>
         /// <param name="namespaces"></param>
-        static void Output(Env env, string file, List<string> namespaces)
+        static void Output(Env env, string file, HashSet<string> namespaces)
         {
             if (File.Exists(file)) File.Delete(file);
             using (var op = File.CreateText(file))
@@ -790,7 +790,7 @@ namespace DbCache
         {
             string[] config = null;
             var map = new Dictionary<string, TableMapping>();
-            var cfg = new Config { Namespaces = new List<string>(), Mappings = map };
+            var cfg = new Config { Namespaces = new HashSet<string>(), Mappings = map };
             var included = new HashSet<string>();
             string pwd = string.Empty;
             // parse command-line arguments
