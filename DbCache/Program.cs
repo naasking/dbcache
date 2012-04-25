@@ -510,7 +510,7 @@ namespace DbCache
         {
             var val = value.Instance;
             return val.IsNull()  ? "default(" + value.ExpectedType.FullName + ")":
-                   val is string ? "\"" + (val as string) + "\"":
+                   val is string ? "\"" + (val as string).Replace("\"", "\\\"") + "\"":
                    val is bool   ? val.ToString().ToLower():
                    val is decimal? val.ToString() + "M":
                    val is float  ? val.ToString() + "F":
