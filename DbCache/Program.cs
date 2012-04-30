@@ -506,7 +506,7 @@ namespace DbCache
         /// <param name="val"></param>
         /// <param name="expected"></param>
         /// <returns></returns>
-        static string quote(Env.Value value)
+        static string Quote(Env.Value value)
         {
             var val = value.Instance;
             return val.IsNull()  ? "default(" + value.ExpectedType.FullName + ")":
@@ -516,7 +516,7 @@ namespace DbCache
                    val is float  ? val.ToString() + "F":
                                    val.ToString();
         }
-        static string normalize(char c, bool skip)
+        static string Normalize(char c, bool skip)
         {
             switch (c)
             {
@@ -537,14 +537,14 @@ namespace DbCache
         /// <param name="name"></param>
         /// <param name="sb"></param>
         /// <returns></returns>
-        static int skipNum(string name, StringBuilder sb)
+        static int SkipNum(string name, StringBuilder sb)
         {
             int i = 0;
             while(i < name.Length && char.IsDigit(name[i])) ++i;
             if (i > 0)
             {
                 var n = int.Parse(name.Substring(0, i));
-                sb.Append(normalize(Number.ToSentence(n)));
+                sb.Append(Normalize(Number.ToSentence(n)));
             }
             return i;
         }
@@ -553,13 +553,13 @@ namespace DbCache
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        static string normalize(this string name)
+        static string Normalize(this string name)
         {
             var sb = new StringBuilder();
             var skip = true;
-            for (int i = skipNum(name, sb); i < name.Length; ++i)
+            for (int i = SkipNum(name, sb); i < name.Length; ++i)
             {
-                var w = normalize(name[i], skip);
+                var w = Normalize(name[i], skip);
                 if (w == null) { skip = true; continue; }
                 sb.Append(w);
                 skip = false;
@@ -574,11 +574,11 @@ namespace DbCache
         /// <param name="value"></param>
         /// <param name="expectedType"></param>
         /// <returns></returns>
-        static string substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
+        static string Substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
         {
-            return string.IsNullOrEmpty(exp) ? quote(value):
+            return string.IsNullOrEmpty(exp) ? Quote(value):
                    value.Instance.IsNull()   ? "default(" + expectedType + ")":
-                                               exp.Replace("%" + col + "%", quote(value));
+                                               exp.Replace("%" + col + "%", Quote(value));
         }
         /// <summary>
         /// Checks whether object is null or an instance of DBNull.
@@ -677,7 +677,7 @@ namespace DbCache
             {
                 // extract primary key value and description
                 var pk = new Env.Value { Instance = row.Cells[table.PK], ExpectedType = data.Columns[table.PK] };
-                var pkname = new Env.Name { Value = normalize(row.Cells[table.Name].ToString()) };
+                var pkname = new Env.Name { Value = Normalize(row.Cells[table.Name].ToString()) };
                 type.Values[pk] = pkname;
 
                 // fill in switch-statement stubs
@@ -711,7 +711,7 @@ namespace DbCache
                     else
                     {
                         // substitute escaped field value for quoted column name
-                        exp = substitute(col.Value.Expression, col.Key, fk, returnedType);
+                        exp = Substitute(col.Value.Expression, col.Key, fk, returnedType);
                     }
                     fn.Cases[pkname] = exp;
                 }
@@ -724,7 +724,7 @@ namespace DbCache
         /// <param name="token"></param>
         /// <param name="input"></param>
         /// <returns></returns>
-        static string[] split(string token, string input)
+        static string[] Split(string token, string input)
         {
             return input.Split(StringSplitOptions.RemoveEmptyEntries, token);
         }
@@ -765,7 +765,7 @@ namespace DbCache
         static string FindByKey(this string[] args, string key, string otherwise)
         {
             var result = args.FindByKey(key).FirstOrDefault() ?? otherwise;
-            error(result == null, "Missing '" + key + "'.", null);
+            Error(result == null, "Missing '" + key + "'.", null);
             return result;
         }
         /// <summary>
@@ -774,7 +774,7 @@ namespace DbCache
         /// <param name="cond"></param>
         /// <param name="err"></param>
         /// <param name="line"></param>
-        static void error(bool cond, string err, int? line)
+        static void Error(bool cond, string err, int? line)
         {
             if (cond) throw new ArgumentException(
                 line == null ? err:
@@ -810,7 +810,7 @@ namespace DbCache
                 }
             }
             // ensure we have input and output files
-            error(config == null || cfg.OutputFile == null, usage, null);
+            Error(config == null || cfg.OutputFile == null, usage, null);
             return Parse(cfg, pwd, config, included);
         }
         /// <summary>
@@ -832,33 +832,33 @@ namespace DbCache
                 {
                     // declare the database type and connection string
                     var line = config[i].Split('=');
-                    error(line.Length < 2, "Improper ::database declaration", i);
+                    Error(line.Length < 2, "Improper ::database declaration", i);
                     var dbType = line[1].Trim();
                     cfg.DbType = dbType;
-                    error(++i >= config.Length, "Missing ::database connection string", i);
+                    Error(++i >= config.Length, "Missing ::database connection string", i);
                     cfg.DB = config[i].Trim();
                 }
                 else if (cmd.StartsWith("::using"))
                 {
                     // included namespaces in output file
                     var line = config[i].Split('=');
-                    error(line.Length < 2, "Improper ::using declaration", i);
+                    Error(line.Length < 2, "Improper ::using declaration", i);
                     var ns = line[1].Trim();
                     cfg.Namespaces.Add(ns);
                 }
                 else if (cmd.StartsWith("::include "))
                 {
                     var path = Path.Combine(pwd, cmd.Substring("::include ".Length));
-                    error(string.IsNullOrEmpty(path), "Please provide a valid ::include path.", i);
-                    error(!File.Exists(path), "File specified by ::include does not exist.", i);
+                    Error(string.IsNullOrEmpty(path), "Please provide a valid ::include path.", i);
+                    Error(!File.Exists(path), "File specified by ::include does not exist.", i);
                     if (included.Contains(path)) continue;
                     cfg = Parse(cfg, pwd, File.ReadAllLines(path), included);
                 }
                 else if (config[i].StartsWith("::table"))
                 {
                     // extract top-level table info, ie. pk, enum name, etc.
-                    var table = split("::", config[i]);
-                    error(table.Length < 4, "::table requires table, enum, pk, and name specified.", i);
+                    var table = Split("::", config[i]);
+                    Error(table.Length < 4, "::table requires table, enum, pk, and name specified.", i);
                     var tname = table.FindByKey("table", null);
                     var tableMap = new TableMapping
                     {
@@ -871,8 +871,8 @@ namespace DbCache
                     // extract column info from mapping file
                     for (++i; i < config.Length && !config[i].StartsWith("::"); ++i)
                     {
-                        error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, i);
-                        var column = split("::", config[i]);
+                        Error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, i);
+                        var column = Split("::", config[i]);
                         var name = column[0].Trim();
                         tableMap.Columns[name] = new ColumnMapping
                         {
