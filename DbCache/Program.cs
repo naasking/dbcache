@@ -9,7 +9,6 @@ using System.Data.SqlClient;
 using System.Data.OleDb;
 using Sasa;
 using Sasa.Linq;
-using Sasa.String;
 using Sasa.Collections;
 
 namespace DbCache
@@ -210,12 +209,12 @@ namespace DbCache
             /// <param name="arg"></param>
             /// <param name="returnType"></param>
             /// <returns></returns>
-            public TypFun Fun(string name, TypIntern arg, Typ returnType)
+            public TypFun Fun(string name, bool isPK, TypIntern arg, Typ returnType)
             {
                 var m = mangle(name, arg);
                 if (!fns.ContainsKey(m))
                 {
-                    var fn = new TypFun(arg, returnType);
+                    var fn = new TypFun(isPK, arg, returnType);
                     arg.Functions.Add(name, fn);
                     fns[m] = fn;
                 }
@@ -367,12 +366,17 @@ namespace DbCache
             /// </summary>
             public sealed class TypFun
             {
-                internal TypFun(Typ arg, Typ returnType)
+                internal TypFun(bool isPK, Typ arg, Typ returnType)
                 {
+                    IsPK = isPK;
                     ArgType = arg;
                     ReturnType = returnType;
                     Cases = new Dictionary<Name, string>();
                 }
+                /// <summary>
+                /// True if the type-function is just a PK coercion.
+                /// </summary>
+                public bool IsPK { get; private set; }
                 /// <summary>
                 /// The input type of the function.
                 /// </summary>
@@ -468,7 +472,7 @@ namespace DbCache
                     // write out any column functions, if applicable
                     if (type.Functions.Count > 0)
                     {
-                        op.WriteLine("    public static class {0}Extensions", type.BaseType());
+                        op.WriteLine("    public static partial class {0}Extensions", type.BaseType());
                         op.WriteLine("    {");
                         foreach (var fn in type.Functions)
                         {
@@ -478,16 +482,23 @@ namespace DbCache
                             op.WriteLine("        public static {0} {1}(this {2} value)",
                                          fn.Value.ReturnType, fn.Key, fn.Value.ArgType.BaseType());
                             op.WriteLine("        {");
-                            op.WriteLine("            switch (value)");
-                            op.WriteLine("            {");
-                            foreach (var _case in fn.Value.Cases)
+                            if (fn.Value.IsPK)
                             {
-                                op.WriteLine("                case {0}.{1}: return {2};",
-                                             fn.Value.ArgType.BaseType(), _case.Key, _case.Value);
+                                op.WriteLine("            return ({0})value;", fn.Value.ReturnType);
                             }
-                            op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided.\");",
-                                         type.BaseType());
-                            op.WriteLine("            }");
+                            else
+                            {
+                                op.WriteLine("            switch (value)");
+                                op.WriteLine("            {");
+                                foreach (var _case in fn.Value.Cases)
+                                {
+                                    op.WriteLine("                case {0}.{1}: return {2};",
+                                                 fn.Value.ArgType.BaseType(), _case.Key, _case.Value);
+                                }
+                                op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided.\");",
+                                             type.BaseType());
+                                op.WriteLine("            }");
+                            }
                             op.WriteLine("        }");
                         }
                         op.WriteLine("    }");
@@ -595,7 +606,7 @@ namespace DbCache
             var cmd = conn.CreateCommand();
                 cmd.CommandText = string.Format(
                     "SELECT {0} FROM {1}",
-                    table.PK.Cons(table.Name.Cons(table.Columns.Keys)).Format(","), table.Table);
+                    table.PK.Push(table.Name.Push(table.Columns.Keys)).Format(","), table.Table);
 
             // load all table values into TableData and DataRow
             using (var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo))
@@ -657,7 +668,7 @@ namespace DbCache
                                : col.Value.ReturnType;
                 // by default, ReturnType is TypVar, ie. an unresolved type
                 // the concrete type is resolved on-demand
-                env.Fun(col.Value.Function, type, env.Var(returnType));
+                env.Fun(col.Value.Function, table.PK.Equals(col.Key, StringComparison.OrdinalIgnoreCase), type, env.Var(returnType));
             }
             Functions(table, mappings, env);
         }
