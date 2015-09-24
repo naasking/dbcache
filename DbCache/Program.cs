@@ -22,7 +22,7 @@ namespace DbCache
 @"Usage: dbcache /in:<config> /out:<output>
 
   /in:  input configuration file
-  /out:  output C# source code file";
+  /out: output C# source code file";
 
         /// <summary>
         /// Top-level configuration object.
@@ -44,7 +44,7 @@ namespace DbCache
             /// <summary>
             /// Table name to TableMapping map.
             /// </summary>
-            public Dictionary<string, TableMapping> Mappings { get; set; }
+            public Dictionary<string, EnumMapping> Mappings { get; set; }
             /// <summary>
             /// The file to which the output is written.
             /// </summary>
@@ -53,24 +53,24 @@ namespace DbCache
         /// <summary>
         /// A table to enum mapping declaration.
         /// </summary>
-        sealed class TableMapping
+        sealed class EnumMapping
         {
-            public TableMapping()
+            public EnumMapping()
             {
-                Columns = new Dictionary<string, ColumnMapping>();
+                Columns = new Dictionary<string, EnumExtension>();
             }
             /// <summary>
             /// Table name.
             /// </summary>
-            public string Table { get; set; }
+            public string TableName { get; set; }
             /// <summary>
             /// Enum type name.
             /// </summary>
             public string EnumFQN { get; set; }
             /// <summary>
-            /// Enum field name.
+            /// Enum's field name.
             /// </summary>
-            public string Name { get; set; }
+            public string ColumnName { get; set; }
             /// <summary>
             /// Name of primary key.
             /// </summary>
@@ -78,25 +78,51 @@ namespace DbCache
             /// <summary>
             /// Mapped table columns.
             /// </summary>
-            public Dictionary<string, ColumnMapping> Columns { get; private set; }
+            public Dictionary<string, EnumExtension> Columns { get; private set; }
             /// <summary>
             /// Cached table data.
             /// </summary>
-            public TableData Data { get; set; }
+            public TableData Table { get; set; }
             /// <summary>
             /// Attributes attached to the enum.
             /// </summary>
             public IEnumerable<string> Attributes { get; set; }
+
+            public IEnumerable<KeyValuePair<string, object>> GetDefinition(out string ns, out string type)
+            {
+                var i = EnumFQN.LastIndexOf('.');
+                type = i < 0 ? EnumFQN : EnumFQN.Remove(0, i + 1);
+                ns = i < 0 ? "" : EnumFQN.Substring(0, i);
+                return Table.Rows.Select(x => new KeyValuePair<string, object>(x.Cells[ENUM_ENTRY].ToString(), x.Cells[PK]));
+            }
+
+            /// <summary>
+            /// Generate a reference to the enum's name for a given PK value.
+            /// </summary>
+            /// <param name="pkValue"></param>
+            /// <returns></returns>
+            public string NameFromPK(object pkValue)
+            {
+                if (pkValue.IsNull()) return null;
+                foreach (var row in Table.Rows)
+                {
+                    if (row.Cells[PK].Equals(pkValue))
+                        return row.Cells[ENUM_ENTRY].ToString();
+                }
+                if (!System.Diagnostics.Debugger.IsAttached)
+                    Console.ReadLine();
+                throw new ArgumentException("Table " + TableName + " has no PK=" + pkValue);
+            }
         }
         /// <summary>
         /// A column to extension method mapping declaration.
         /// </summary>
-        sealed class ColumnMapping
+        sealed class EnumExtension
         {
-            /// <summary>
-            /// Table this column belongs to.
-            /// </summary>
-            public TableMapping Table { get; set; }
+            ///// <summary>
+            ///// Table this column belongs to.
+            ///// </summary>
+            //public TableMapping Table { get; set; }
             /// <summary>
             /// The function name this column will be translated to.
             /// </summary>
@@ -109,21 +135,28 @@ namespace DbCache
             /// Fully-qualified name of the return type.
             /// </summary>
             public string ReturnType { get; set; }
+            /// <summary>
+            /// True if the column is nullable.
+            /// </summary>
+            public bool IsNullable { get; set; }
+
+            public bool IsFK { get; set; }
         }
         /// <summary>
         /// Encapsulates all relevant column and row data and metadata of a given table.
         /// </summary>
         sealed class TableData
         {
-            public TableData()
+            public TableData(EnumMapping map)
             {
                 Rows = new List<RowData>();
-                Columns = new Dictionary<string, Type>();
+                Schema = new Dictionary<string, Type>();
+                map.Table = this;
             }
             /// <summary>
             /// The column metadata, ie. name and type info.
             /// </summary>
-            public Dictionary<string, Type> Columns { get; private set; }
+            public Dictionary<string, Type> Schema { get; private set; }
             /// <summary>
             /// The rows in this table.
             /// </summary>
@@ -143,254 +176,6 @@ namespace DbCache
             /// </summary>
             public Dictionary<string, object> Cells { get; private set; }
         }
-        /// <summary>
-        /// Top-level environment. This holds the final result of the compilation,
-        /// ie. all type and function definitions.
-        /// </summary>
-        sealed class Env
-        {
-            Dictionary<string, Typ> types = new Dictionary<string, Typ>();
-            Dictionary<string, TypFun> fns = new Dictionary<string, TypFun>();
-
-            /// <summary>
-            /// Resolve a fully-qualified type name to a final type definition.
-            /// If no internal type exists, it defaults to external linkage,
-            /// meaning it is a predefined type that will not be filled from a table.
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            internal Typ Resolve(string name)
-            {
-                if (!types.ContainsKey(name)) types[name] = new TypExtern(name);
-                return types[name];
-            }
-            /// <summary>
-            /// Creates a type variable, ie. a deferred type binding, if binding
-            /// does not already exist.
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            public Typ Var(string name)
-            {
-                return types.ContainsKey(name)
-                     ? types[name]
-                     : new TypVar(this, name);
-            }
-            /// <summary>
-            /// Declare a new InteralType, meaning a type that will be filled in from table data.
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            public TypIntern Define(string name, IEnumerable<string> attributes)
-            {
-                if (!types.ContainsKey(name)) types[name] = new TypIntern(name, attributes);
-                // promote to internal type on demand
-                var typ = types[name];
-                if (!(typ is TypIntern)) types[name] = typ = new TypIntern(name, attributes);
-                return typ as TypIntern;
-            }
-            string mangle(string name, TypIntern arg)
-            {
-                return arg.FQN + "#" + name;
-            }
-            /// <summary>
-            /// Declare a function with the given name.
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            public TypFun Fun(string name, TypIntern arg)
-            {
-                return fns[mangle(name, arg)];
-            }
-            /// <summary>
-            /// Declare a function with the given name and argument and return types.
-            /// </summary>
-            /// <param name="name"></param>
-            /// <param name="arg"></param>
-            /// <param name="returnType"></param>
-            /// <returns></returns>
-            public TypFun Fun(string name, bool isPK, TypIntern arg, Typ returnType)
-            {
-                var m = mangle(name, arg);
-                if (!fns.ContainsKey(m))
-                {
-                    var fn = new TypFun(isPK, arg, returnType);
-                    arg.Functions.Add(name, fn);
-                    fns[m] = fn;
-                }
-                return Fun(name, arg);
-            }
-            /// <summary>
-            /// We're generally only interested in internal types.
-            /// </summary>
-            public IEnumerable<TypIntern> Types
-            {
-                get
-                {
-                    foreach (var type in types.Values)
-                    {
-                        if (type is TypIntern)
-                        {
-                            yield return type as TypIntern;
-                        }
-                    }
-                }
-            }
-            /// <summary>
-            /// The set of functions to be generated.
-            /// </summary>
-            public IEnumerable<TypFun> Functions
-            {
-                get { return fns.Values; }
-            }
-
-
-            /// <summary>
-            /// Base class for all types.
-            /// </summary>
-            public abstract class Typ
-            {
-                internal Typ(string fqn)
-                {
-                    FQN = fqn;
-                }
-                /// <summary>
-                /// Fully-qualified type name.
-                /// </summary>
-                public string FQN { get; private set; }
-                public string Namespace()
-                {
-                    var i = FQN.LastIndexOf('.');
-                    return i < 0 ? "" : FQN.Substring(0, i);
-                }
-                /// <summary>
-                /// Return the non-fully qualified name of the type.
-                /// </summary>
-                /// <returns></returns>
-                public string BaseType()
-                {
-                    var i = FQN.LastIndexOf('.') + 1;
-                    return FQN.Substring(i <= 0 ? 0 : i);
-                }
-                public override string ToString()
-                {
-                    return FQN;
-                }
-                /// <summary>
-                /// Resolve the Typ to a ground Typ, ie. either internal or external.
-                /// </summary>
-                /// <param name="mappings"></param>
-                /// <param name="env"></param>
-                /// <returns></returns>
-                public virtual Typ Resolve(Dictionary<string, TableMapping> mappings, Env env)
-                {
-                    return this;
-                }
-            }
-            /// <summary>
-            /// An unresolved type reference.
-            /// </summary>
-            public sealed class TypVar : Typ
-            {
-                public TypVar(Env env, string fqn) : base(fqn)
-                {
-                    Env = env;
-                }
-                internal Typ Underlying { get; private set; }
-                internal Env Env { get; private set; }
-                public override Typ Resolve(Dictionary<string, TableMapping> mappings, Env env)
-                {
-                    if (Underlying != null) return Underlying;
-                    var table = mappings.Values.Where(t => t.EnumFQN == FQN).SingleOrDefault();
-                    if (table != null) Compile(table, mappings, env);
-                    return Underlying = Env.Resolve(FQN);
-                }
-            }
-            /// <summary>
-            /// External resolved type.
-            /// </summary>
-            public sealed class TypExtern : Typ
-            {
-                public TypExtern(string name) : base(name) { }
-            }
-            /// <summary>
-            /// Represents a constructor name.
-            /// </summary>
-            public struct Name
-            {
-                public string Value { get; set; }
-                public override string ToString()
-                {
-                    return Value;
-                }
-            }
-            /// <summary>
-            /// A value paired with its expected type.
-            /// </summary>
-            public struct Value
-            {
-                public object Instance { get; set; }
-                public Type ExpectedType { get; set; }
-                public override string ToString()
-                {
-                    return Instance.ToString();
-                }
-            }
-            /// <summary>
-            /// Internal resolved type.
-            /// </summary>
-            public sealed class TypIntern : Typ
-            {
-                internal TypIntern(string name, IEnumerable<string> attr)
-                    : base(name)
-                {
-                    Attributes = attr;
-                    Values = new Dictionary<Value, Name>();
-                    Functions = new Dictionary<string, TypFun>();
-                }
-                /// <summary>
-                /// Map field name to value.
-                /// </summary>
-                public Dictionary<Value, Name> Values { get; private set; }
-                /// <summary>
-                /// Set of functions for this type.
-                /// </summary>
-                internal Dictionary<string, TypFun> Functions { get; private set; }
-                /// <summary>
-                /// Set of attributes.
-                /// </summary>
-                public IEnumerable<string> Attributes { get; private set; }
-            }
-            /// <summary>
-            /// Functions on types.
-            /// </summary>
-            public sealed class TypFun
-            {
-                internal TypFun(bool isPK, Typ arg, Typ returnType)
-                {
-                    IsPK = isPK;
-                    ArgType = arg;
-                    ReturnType = returnType;
-                    Cases = new Dictionary<Name, string>();
-                }
-                /// <summary>
-                /// True if the type-function is just a PK coercion.
-                /// </summary>
-                public bool IsPK { get; private set; }
-                /// <summary>
-                /// The input type of the function.
-                /// </summary>
-                public Typ ArgType { get; private set; }
-                /// <summary>
-                /// The return type of the function.
-                /// </summary>
-                public Typ ReturnType { get; private set; }
-                /// <summary>
-                /// Maps ArgType.FieldName to a return expression.
-                /// </summary>
-                public Dictionary<Name, string> Cases { get; private set; }
-            }
-        }
 
         // Extract set of named tables into set of enums with appropriate extension methods
         // mapping primary keys to the respective rows.
@@ -404,7 +189,6 @@ namespace DbCache
         {
             try
             {
-                var env = new Env();
                 var cfg = Parse(args);
                 using (var conn = GetConn(cfg.DbType, cfg.DB))
                 {
@@ -414,18 +198,17 @@ namespace DbCache
                         Schema(table, conn);
                     }
                 }
-                foreach (var table in cfg.Mappings.Values)
-                {
-                    Compile(table, cfg.Mappings, env);
-                }
-                Output(env, cfg.OutputFile, cfg.Namespaces);
+                Compile(cfg.Mappings);
+                Output(cfg.Mappings, cfg.OutputFile, cfg.Namespaces);
                 Console.WriteLine("Mapping successfully generated...");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
 #if DEBUG
+                Console.WriteLine(ex);
                 Console.ReadLine();
+#else
+                Console.WriteLine(ex.Message);
 #endif
             }
         }
@@ -436,7 +219,7 @@ namespace DbCache
         /// <param name="env"></param>
         /// <param name="file"></param>
         /// <param name="namespaces"></param>
-        static void Output(Env env, string file, HashSet<string> namespaces)
+        static void Output(Dictionary<string, EnumMapping> mappings, string file, HashSet<string> namespaces)
         {
             if (File.Exists(file)) File.Delete(file);
             using (var op = File.CreateText(file))
@@ -447,10 +230,11 @@ namespace DbCache
                 op.WriteLine();
 
                 // write out enum declaration with its stub
-                foreach (var type in env.Types)
+                foreach (var type in mappings.Values)
                 {
                     // enum namespace
-                    var ns = type.Namespace();
+                    string ns, name;
+                    var values = type.GetDefinition(out ns, out name);
                     if (!string.IsNullOrEmpty(ns))
                     {
                         op.WriteLine("namespace {0}", ns);
@@ -461,28 +245,28 @@ namespace DbCache
                     {
                         op.WriteLine("    [{0}]", attr);
                     }
-                    op.WriteLine("    public enum {0}", type.BaseType());
+                    op.WriteLine("    public enum {0}", name);
                     op.WriteLine("    {");
-                    foreach (var value in type.Values)
+                    foreach (var x in values)
                     {
-                        op.WriteLine("        {0} = {1},", value.Value, value.Key);
+                        op.WriteLine("        {0} = {1},", x.Key, x.Value);
                     }
                     op.WriteLine("    }");
 
                     // write out any column functions, if applicable
-                    if (type.Functions.Count > 0)
+                    if (type.Columns.Count > 0)
                     {
-                        op.WriteLine("    public static partial class {0}Extensions", type.BaseType());
+                        op.WriteLine("    public static partial class {0}Extensions", name);
                         op.WriteLine("    {");
-                        foreach (var fn in type.Functions)
+                        foreach (var fn in type.Columns)
                         {
                             // each function is an extension method which switches
                             // on the enum value and maps it to another value
 
                             op.WriteLine("        public static {0} {1}(this {2} value)",
-                                         fn.Value.ReturnType, fn.Key, fn.Value.ArgType.BaseType());
+                                fn.Value.ReturnType, string.IsNullOrEmpty(fn.Value.Function) ? fn.Key : fn.Value.Function, name);
                             op.WriteLine("        {");
-                            if (fn.Value.IsPK)
+                            if (string.Equals(fn.Key, type.PK, StringComparison.OrdinalIgnoreCase))
                             {
                                 op.WriteLine("            return ({0})value;", fn.Value.ReturnType);
                             }
@@ -490,13 +274,16 @@ namespace DbCache
                             {
                                 op.WriteLine("            switch (value)");
                                 op.WriteLine("            {");
-                                foreach (var _case in fn.Value.Cases)
+                                foreach (var row in type.Table.Rows)
                                 {
+                                    var expr = !string.IsNullOrEmpty(fn.Value.Expression)
+                                             ? fn.Value.Expression.Replace('%' + fn.Key + '%',row.Cells[fn.Key].ToString())
+                                             : Quote(row.Cells[fn.Key], fn.Value.IsFK, fn.Value.ReturnType);
                                     op.WriteLine("                case {0}.{1}: return {2};",
-                                                 fn.Value.ArgType.BaseType(), _case.Key, _case.Value);
+                                                 name, row.Cells[ENUM_ENTRY], expr);
                                 }
                                 op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided.\");",
-                                             type.BaseType());
+                                             type.EnumFQN);
                                 op.WriteLine("            }");
                             }
                             op.WriteLine("        }");
@@ -510,6 +297,7 @@ namespace DbCache
                 }
             }
         }
+
         #endregion
         /// <summary>
         /// Quote the given value as a C# expression given the actual and expected type.
@@ -517,11 +305,10 @@ namespace DbCache
         /// <param name="val"></param>
         /// <param name="expected"></param>
         /// <returns></returns>
-        static string Quote(Env.Value value)
+        static string Quote(object val, bool fk, string expectedType)
         {
-            var val = value.Instance;
-            return val.IsNull()  ? "default(" + value.ExpectedType.FullName + ")":
-                   val is string ? "\"" + (val as string).Replace("\"", "\\\"") + "\"":
+            return val.IsNull()  ? "default(" + expectedType + ")":
+                   val is string && !fk ? "\"" + (val as string).Replace("\"", "\\\"") + "\"":
                    val is bool   ? val.ToString().ToLower():
                    val is decimal? val.ToString() + "M":
                    val is float  ? val.ToString() + "F":
@@ -578,20 +365,6 @@ namespace DbCache
             return sb.ToString();
         }
         /// <summary>
-        /// Perform a value or template substitution, depending on the given args.
-        /// </summary>
-        /// <param name="exp"></param>
-        /// <param name="col"></param>
-        /// <param name="value"></param>
-        /// <param name="expectedType"></param>
-        /// <returns></returns>
-        static string Substitute(string exp, string col, Env.Value value, Env.Typ expectedType)
-        {
-            return string.IsNullOrEmpty(exp) ? Quote(value):
-                   value.Instance.IsNull()   ? "default(" + expectedType + ")":
-                                               exp.Replace("%" + col + "%", Quote(value));
-        }
-        /// <summary>
         /// Checks whether object is null or an instance of DBNull.
         /// </summary>
         /// <param name="o"></param>
@@ -601,47 +374,58 @@ namespace DbCache
             return o == null || o is DBNull;
         }
         #region Database Schema
-        static void Schema(TableMapping table, DbConnection conn)
+        static void Schema(EnumMapping map, DbConnection conn)
         {
             var cmd = conn.CreateCommand();
                 cmd.CommandText = string.Format(
                     "SELECT {0} FROM {1}",
-                    table.PK.Push(table.Name.Push(table.Columns.Keys)).Format(","), table.Table);
+                    map.PK.Push(map.ColumnName.Push(map.Columns.Keys)).Format(","), map.TableName);
 
             // load all table values into TableData and DataRow
             using (var reader = cmd.ExecuteReader(CommandBehavior.KeyInfo))
             {
-                var data = new TableData();
-                BindColumns(data, table, reader);
-                BindRows(data, table, reader);
+                var data = new TableData(map);
+                FillSchema(map, reader);
+                FillData(data, map, reader);
             }
         }
-        static void BindColumns(TableData data, TableMapping table, DbDataReader reader)
+        static Type nullable = typeof(Nullable<>);
+        static void FillSchema(EnumMapping map, DbDataReader reader)
         {
             // load column definitions, ie. names and types, starting with
             // PK and name column
-            data.Columns[table.PK] = reader.GetFieldType(0);
-            data.Columns[table.Name] = reader.GetFieldType(1);
-            table.Data = data;
-            foreach (var col in table.Columns)
+            map.Table.Schema[map.PK] = reader.GetFieldType(0);
+            map.Table.Schema[ENUM_ENTRY] = reader.GetFieldType(1);
+            var schema = reader.GetSchemaTable();
+            //if (!System.Diagnostics.Debugger.IsAttached)
+            //    Console.ReadLine();
+            foreach (var col in map.Columns)
             {
                 var i = reader.GetOrdinal(col.Key);
-                data.Columns[col.Key] = reader.GetFieldType(i);
+                var rcol = schema.Rows[i];
+                col.Value.IsNullable = (bool)rcol["AllowDBNull"];
+                map.Table.Schema[col.Key] = reader.GetFieldType(i);
             }
         }
-        static void BindRows(TableData data, TableMapping table, DbDataReader reader)
+        const string ENUM_ENTRY = "__enum_entry";
+        static void FillData(TableData table, EnumMapping map, DbDataReader reader)
         {
             // load row data, including PK and name columns
             foreach (IDataRecord drow in reader)
             {
-                var row = new RowData();
-                    row.Cells[table.PK] = drow.GetValue(0);
-                    row.Cells[table.Name] = drow.GetValue(1);
-                data.Rows.Add(row);
-                foreach (var col in table.Columns)
+                // copy the raw data from the reader to TableData
+                var row = new RowData
                 {
-                    var i = drow.GetOrdinal(col.Key);
-                    row.Cells[col.Key] = drow.GetValue(i);
+                    Cells =
+                    {
+                        { map.PK, drow.GetValue(0) },
+                        { ENUM_ENTRY, Normalize(drow.GetValue(1).ToString()) },
+                    }
+                };
+                table.Rows.Add(row);
+                foreach (var col in map.Columns)
+                {
+                    row.Cells[col.Key] = drow[col.Key];
                 }
             }
         }
@@ -652,79 +436,33 @@ namespace DbCache
         /// <param name="table"></param>
         /// <param name="mappings"></param>
         /// <param name="env"></param>
-        static void Compile(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
+        static void Compile(Dictionary<string, EnumMapping> mappings)
         {
-            // declare top-level type
-            var type = env.Define(table.EnumFQN, table.Attributes);
-
-            // build function signatures with explicitly typed
-            // argument and return types
-            foreach (var col in table.Columns)
+            // iterate through all mappings and for every mapped column that:
+            // 1. has an explicit return type, map the row[column].value to the corresponding enum name,
+            // 2. is nullable, then change the return type
+            foreach (var map in mappings.Values)
             {
-                // if return type provided, use that, else use type
-                // of table column
-                var returnType = string.IsNullOrEmpty(col.Value.ReturnType)
-                               ? table.Data.Columns[col.Key].FullName
-                               : col.Value.ReturnType;
-                // by default, ReturnType is TypVar, ie. an unresolved type
-                // the concrete type is resolved on-demand
-                env.Fun(col.Value.Function, table.PK.Equals(col.Key, StringComparison.OrdinalIgnoreCase), type, env.Var(returnType));
-            }
-            Functions(table, mappings, env);
-        }
-        /// <summary>
-        /// Compile the given table's functions with the given environment and table mappings.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="mappings"></param>
-        /// <param name="env"></param>
-        static void Functions(TableMapping table, Dictionary<string, TableMapping> mappings, Env env)
-        {
-            var type = env.Define(table.EnumFQN, table.Attributes);
-            var data = table.Data;
-
-            // fill in enum and switch stubs
-            foreach (var row in data.Rows)
-            {
-                // extract primary key value and description
-                var pk = new Env.Value { Instance = row.Cells[table.PK], ExpectedType = data.Columns[table.PK] };
-                var pkname = new Env.Name { Value = Normalize(row.Cells[table.Name].ToString()) };
-                type.Values[pk] = pkname;
-
-                // fill in switch-statement stubs
-                foreach (var col in table.Columns)
+                foreach (var col in map.Columns)
                 {
-                    var fn = env.Fun(col.Value.Function, type);
-                    // ensure Typ is fully resolved to a ground type
-                    var returnedType = fn.ReturnType.Resolve(mappings, env);
-                    var fk = new Env.Value { Instance = row.Cells[col.Key], ExpectedType = data.Columns[col.Key] };
-                    string exp;
-                    // if the column value is null, then we don't add a case for this
-                    // so the pattern match is not exhaustive, and we throw an exception
-                    // if this value is provided
-                    if (fk.Instance.IsNull() && fk.ExpectedType.IsValueType) continue;
-
-                    // if internal type, resolve foreign key value to enum name
-                    // else perform an expression substitution
-                    if (returnedType is Env.TypIntern)
+                    // update the return type mapping of each column
+                    EnumMapping fk;
+                    if (!string.IsNullOrEmpty(col.Value.ReturnType) && string.IsNullOrEmpty(col.Value.Expression) && mappings.TryGetValue(col.Value.ReturnType, out fk))
                     {
-
-                        // checks whether the fk value has materialized yet
-                        // if not, it compiles it before continuing
-                        var rt = returnedType as Env.TypIntern;
-                        var fkname = rt.Values[fk];
-                        // if returned type shares a namespace with arg type,
-                        // then remove the shared part of the path
-                        var ns = rt.Namespace();
-                        var qn = type.FQN.StartsWith(ns) ? rt.FQN.Substring(ns.Length + 1) : rt.FQN;
-                        exp = string.Format("{0}.{1}", qn == col.Value.Function ? rt.FQN : qn, fkname);
+                        col.Value.IsFK = true;
+                        foreach (var row in map.Table.Rows)
+                        {
+                            var x = fk.NameFromPK(row.Cells[col.Key]);
+                            row.Cells[col.Key] = x == null ? null : fk.EnumFQN + '.' + x;
+                        }
                     }
-                    else
-                    {
-                        // substitute escaped field value for quoted column name
-                        exp = Substitute(col.Value.Expression, col.Key, fk, returnedType);
-                    }
-                    fn.Cases[pkname] = exp;
+                    // if column is a nullable struct, then wrap in System.Nullable
+                    var colType = map.Table.Schema[col.Key];
+                    var baseType = string.IsNullOrEmpty(col.Value.ReturnType) ? colType.FullName : col.Value.ReturnType;
+                    var type = col.Value.IsNullable && colType.IsValueType
+                             ? "System.Nullable<" + baseType + ">"
+                             : baseType;
+                    col.Value.ReturnType = type;
                 }
             }
         }
@@ -800,7 +538,7 @@ namespace DbCache
         static Config Parse(string[] args)
         {
             string[] config = null;
-            var map = new Dictionary<string, TableMapping>();
+            var map = new Dictionary<string, EnumMapping>();
             var cfg = new Config { Namespaces = new HashSet<string>(), Mappings = map };
             var included = new HashSet<string>();
             string pwd = string.Empty;
@@ -871,12 +609,12 @@ namespace DbCache
                     var table = Split("::", config[i]);
                     Error(table.Length < 4, "::table requires table, enum, pk, and name specified.", i);
                     var tname = table.FindByKey("table", null);
-                    var tableMap = new TableMapping
+                    var tableMap = new EnumMapping
                     {
-                        Table = tname,
+                        TableName = tname,
                         EnumFQN = table.FindByKey("enum", tname),
                         PK = table.FindByKey("pk", null),
-                        Name = table.FindByKey("name", null),
+                        ColumnName = table.FindByKey("name", null),
                         Attributes = table.FindByKey("attr"),
                     };
                     // extract column info from mapping file
@@ -885,9 +623,9 @@ namespace DbCache
                         Error(string.IsNullOrEmpty(config[i]), "Missing column information for table " + tname, i);
                         var column = Split("::", config[i]);
                         var name = column[0].Trim();
-                        tableMap.Columns[name] = new ColumnMapping
+                        tableMap.Columns[name] = new EnumExtension
                         {
-                            Table = tableMap,
+                            //Table = tableMap,
                             Function = column.FindByKey("function", name),
                             Expression = column.FindByKey("expression", ""),
                             ReturnType = column.FindByKey("returnType", ""),

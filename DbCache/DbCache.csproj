@@ -38,9 +38,9 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Sasa, Version=0.9.2.25777, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\deps\Sasa.dll</HintPath>
+    <Reference Include="Sasa, Version=0.17.0.0, Culture=neutral, PublicKeyToken=a08e565c5bf106a8, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sasa.0.17.1\lib\net35\Sasa.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -56,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
