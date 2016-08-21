@@ -268,17 +268,20 @@ namespace DbCache
                             op.WriteLine("        {");
                             if (string.Equals(fn.Key, type.PK, StringComparison.OrdinalIgnoreCase))
                             {
+                                // enum-value mapping is an identity, so just insert a cast
                                 op.WriteLine("            return ({0})value;", fn.Value.ReturnType);
                             }
                             else
                             {
+                                // enum-value mapping requires a switch on the enum
                                 op.WriteLine("            switch (value)");
                                 op.WriteLine("            {");
                                 foreach (var row in type.Table.Rows)
                                 {
+                                    var key = row.Cells[fn.Key];
                                     var expr = !string.IsNullOrEmpty(fn.Value.Expression)
-                                             ? fn.Value.Expression.Replace('%' + fn.Key + '%',row.Cells[fn.Key].ToString())
-                                             : Quote(row.Cells[fn.Key], fn.Value.IsFK, fn.Value.ReturnType);
+                                             ? fn.Value.Expression.Replace('%' + fn.Key + '%', key.IsNull() ? "null" : key.ToString())
+                                             : Quote(key, fn.Value.IsFK, fn.Value.ReturnType);
                                     op.WriteLine("                case {0}.{1}: return {2};",
                                                  name, row.Cells[ENUM_ENTRY], expr);
                                 }
