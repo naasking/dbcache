@@ -42,8 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sasa, Version=0.18.0.0, Culture=neutral, PublicKeyToken=a08e565c5bf106a8, processorArchitecture=MSIL">
-      <HintPath>..\packages\Sasa.0.18.0\lib\net40\Sasa.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Sasa.0.18.5\lib\net40\Sasa.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -61,7 +60,6 @@
     <Content Include="config.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
