@@ -285,7 +285,7 @@ namespace DbCache
                                     op.WriteLine("                case {0}.{1}: return {2};",
                                                  name, row.Cells[ENUM_ENTRY], expr);
                                 }
-                                op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided.\");",
+                                op.WriteLine("                default: throw new ArgumentException(\"Invalid {0} provided, value=\" + (long)value + \".\");",
                                              type.EnumFQN);
                                 op.WriteLine("            }");
                             }
